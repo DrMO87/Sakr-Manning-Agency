@@ -1,0 +1,19 @@
+t# No files are ignored
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+*.sqlite3
+django_project/
+db.sqlite3
+Sakr-Manning-Agency-Backend/
+venv/
+media/
+__pycache__/
+*.pyc
+server_logs.txt
+json/
+json_processed/
+all_json_files_processed/

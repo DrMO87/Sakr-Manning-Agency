@@ -1,0 +1,109 @@
+// hooks/useKeyboardShortcut.js
+// Custom hook for handling keyboard shortcuts consistently
+// Eliminates duplicate keyboard event listeners across pages
+
+import { useEffect } from "react";
+
+/**
+ * Custom Hook: useKeyboardShortcut
+ *
+ * Manages keyboard event listeners with automatic cleanup
+ * Prevents duplicate listeners and memory leaks
+ *
+ * Supported shortcuts:
+ * - 'Escape': Close modals, cancel operations
+ * - 'Enter': Submit forms, confirm actions
+ * - 'Delete': Delete operations (if focused)
+ * - 'Ctrl+S' or 'Cmd+S': Save operations
+ * - Any other valid KeyboardEvent.key value
+ *
+ * @param {string} key - The key to listen for (e.g., 'Escape', 'Enter')
+ * @param {function} callback - Function to call when key is pressed
+ * @param {array} dependencies - Dependencies array (when to re-attach listener)
+ * @param {object} options - Additional options
+ * @param {boolean} options.ctrlKey - Require Ctrl key (for Ctrl+X combos)
+ * @param {boolean} options.shiftKey - Require Shift key
+ * @param {boolean} options.altKey - Require Alt key
+ * @param {boolean} options.metaKey - Require Meta key (Cmd on Mac)
+ * @param {string} options.targetSelector - Only trigger on elements matching selector
+ *
+ * @example
+ * // Close modal with Escape key
+ * useKeyboardShortcut('Escape', () => setShowModal(false), [showModal]);
+ *
+ * // Submit form with Enter key
+ * useKeyboardShortcut('Enter', () => handleSubmit(), []);
+ *
+ * // Save with Ctrl+S
+ * useKeyboardShortcut('s', () => handleSave(), [], { ctrlKey: true });
+ *
+ * // Delete when focused on specific element
+ * useKeyboardShortcuts('Delete', () => handleDelete(), [], {
+ *   targetSelector: '.deletable-item'
+ * });
+ */
+const useKeyboardShortcuts = (
+  key,
+  callback,
+  dependencies = [],
+  options = {}
+) => {
+  const {
+    ctrlKey = false,
+    shiftKey = false,
+    altKey = false,
+    metaKey = false,
+    targetSelector = null,
+  } = options;
+
+  useEffect(() => {
+    if (!key || !callback) return;
+
+    const handleKeyDown = (e) => {
+      // If focus is inside a portalled dropdown, let the dropdown handle
+      // the event first (e.g. Escape should close the dropdown, not the modal).
+      if (document.activeElement?.closest('[data-portal-dropdown]')) return;
+
+      // Check if key matches
+      const keyStr = String(key || "").toLowerCase();
+      const keyMatches =
+        (e.key && String(e.key).toLowerCase() === keyStr) ||
+        (e.code && String(e.code).toLowerCase() === keyStr);
+
+      if (!keyMatches) return;
+
+      // Check modifier keys
+      if (ctrlKey && !e.ctrlKey) return;
+      if (shiftKey && !e.shiftKey) return;
+      if (altKey && !e.altKey) return;
+      if (metaKey && !e.metaKey) return;
+
+      // Check target selector if provided
+      if (targetSelector) {
+        const target = e.target.closest(targetSelector);
+        if (!target) return;
+      }
+
+      // Prevent default behavior and execute callback
+      e.preventDefault();
+      callback(e);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    key,
+    callback,
+    ctrlKey,
+    shiftKey,
+    altKey,
+    metaKey,
+    targetSelector,
+    ...dependencies,
+  ]);
+};
+
+export default useKeyboardShortcuts;

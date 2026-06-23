@@ -1,0 +1,465 @@
+src\components\dashboard\DashboardApp.jsx:72: management: "Companies and Ships Management",
+src\components\dashboard\Components\AI\ChatWidget.jsx:39: "👋 Hello! I'm your AI assistant. I can help you with:\n\n• Finding seafarers by rank or certificate\n• Getting statistics and reports\n• Ship and crew information\n• Interview scheduling\n• Company details\n\nWhat would you like to know?",
+src\components\dashboard\Components\AI\ChatWidget.jsx:174: "List all active companies",
+src\components\dashboard\Components\Cards\DocumentCard.jsx:77: const shipName = document.ship || "Unknown Ship";
+src\components\dashboard\Components\Cards\DocumentCard.jsx:78: const companyName = document.company || "Unknown Company";
+src\components\dashboard\Components\Common\FilterChips.jsx:15: * @param {object} activeFilters - Current active filters { status: 'Active', type: 'Shipping' }
+src\components\dashboard\Components\Common\FilterChips.jsx:23: *   activeFilters={{ status: 'Active', type: 'Shipping' }}
+src\components\dashboard\Components\Common\FilterModel.jsx:68: *       { value: 'Shipping', label: 'Shipping' },
+src\components\dashboard\Components\Common\FilterModel.jsx:77: *   title="Filter Companies"
+src\components\dashboard\Components\Common\InterviewModel.jsx:117: if (!formData.company.trim()) newErrors.company = "Company is required";
+src\components\dashboard\Components\Common\InterviewModel.jsx:259: onChange={(e) => handleChange("company", e.target.value)}
+src\components\dashboard\Components\Common\LoadingScreen.jsx:79: animation: "float-ship 3s ease-in-out infinite",
+src\components\dashboard\Components\Common\SearchResultsCard.jsx:33: label: "Company",
+src\components\dashboard\Components\Common\SearchResultsCard.jsx:39: label: "Ship",
+src\components\dashboard\Components\Common\SearchResultsCard.jsx:42: secondaryFields: ["imoNumber", "company", "status"],
+src\components\dashboard\Components\Common\SearchResultsCard.jsx:54: secondaryFields: ["position", "company", "date"],
+src\components\dashboard\Components\Common\SearchResultsCard.jsx:66: secondaryFields: ["company", "startDate"],
+src\components\dashboard\Components\Modal\CompanyFormModal.jsx:39: isEdit ? "Company updated successfully" : "Company created successfully",
+src\components\dashboard\Components\Modal\CompanyFormModal.jsx:40: errorMessage: "Failed to save company",
+src\components\dashboard\Components\Modal\CompanyFormModal.jsx:80: {loading ? "Saving..." : isEditMode ? "Update Company" : "Create Company"}
+src\components\dashboard\Components\Modal\CompanyFormModal.jsx:94: title={isEditMode ? "Edit Company" : "Add New Company"}
+src\components\dashboard\Components\Modal\CVSubmissionFormModal.jsx:60: notify.error("Failed to load users, companies or ranks");
+src\components\dashboard\Components\Modal\CVSubmissionFormModal.jsx:87: if (field.name === "company") {
+src\components\dashboard\Components\Modal\FinanceFormModal.jsx:61: if (field.name === "company") {
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:68: console.error("Failed to load ships", e);
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:90: console.error("Failed to load ship detail", e);
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:131: { name: "repatriation_terms", label: "Repatriation Terms", type: "text", component: "BaseInput", required: false, placeholder: "e.g., Company covers return flight...", defaultValue: "", gridCols: 6 },
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:143: setPositionError("Please select a ship first.");
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:144: throw new Error("Ship required");
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:225: name="ship"
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:226: label="Ship Assignment"
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:240: placeholder={loadingShips ? "Loading ships…" : "Select Ship"}
+src\components\dashboard\Components\Modal\GenerateContractModal.jsx:285: ? "No positions available on this ship's job orders"
+src\components\dashboard\Components\Modal\InterviewFormModal.jsx:49: if (field.name === "company") {
+src\components\dashboard\Components\Modal\JobOrderFormModal.jsx:61: if (field.name === "company") {
+src\components\dashboard\Components\Modal\JobOrderFormModal.jsx:64: if (field.name === "ship") {
+src\components\dashboard\Components\Modal\JobOrderManagementModal.jsx:187: if (field.name === "ship") {
+src\components\dashboard\Components\Modal\JobOrderManagementModal.jsx:348: if (field.name === "company") return null;
+src\components\dashboard\Components\Modal\SettingsSidePanel.jsx:45: defaultRepatriation: "Company covers economy class return flight to nearest international airport upon completion of contract.",
+src\components\dashboard\Components\Modal\SettingsSidePanel.jsx:313: { id: "companies", label: "Companies" }
+src\components\dashboard\Components\Modal\SettingsSidePanel.jsx:347: {selectedDropdown === "companies" ? (
+src\components\dashboard\Components\Modal\SettingsSidePanel.jsx:349: name="company_name"
+src\components\dashboard\Components\Modal\SettingsSidePanel.jsx:350: label="Company Name"
+src\components\dashboard\Components\Modal\SettingsSidePanel.jsx:432: if (selectedDropdown === "companies") {
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:61: if (field.name === "ship_type") {
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:79: if (field.name === "company") {
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:110: isEdit ? "Ship updated successfully" : "Ship created successfully",
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:111: errorMessage: "Failed to save ship",
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:139: (field.name === "ship_type" && loadingVesselTypes) ||
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:159: {loading ? "Saving..." : isEditMode ? "Update Ship" : "Create Ship"}
+src\components\dashboard\Components\Modal\ShipFormModal.jsx:173: title={isEditMode ? "Edit Ship" : "Add New Ship"}
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:131: title="Company Details"
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:182: {fmt(company.company_type, "Company")}
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:190: <Section title="Company Information" icon={Building} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:191: <FieldItem label="Company Name" value={fmt(company.company_name || company.name)} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:192: <FieldItem label="Company Type" value={fmt(company.company_type_name || company.type)} icon={Briefcase} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:200: <FieldItem label="Email" value={fmt(company.contact_email || company.email)} iconType="email" scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:202: <FieldItem label="Company Flag" value={fmt(company.company_flag_name || company.company_flag)} icon={Globe} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:230: <FieldItem label="Total Contracts" value={company.total_contracts} format="number" scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:231: <FieldItem label="Active Employees" value={company.active_employees} format="number" scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CompanyViewModal.jsx:232: <FieldItem label="Total Ships" value={company.ships?.length || company.total_ships} format="number" scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ContractViewModal.jsx:370: <Section title="Company Details" icon={Building} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\ContractViewModal.jsx:371: <FieldItem label="Company Name" value={fmt(contract.company_details?.company_name ?? companyName)} icon={Building} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ContractViewModal.jsx:372: <FieldItem label="Company Type" value={fmt(contract.company_details?.company_type || contract.company_details?.company_type_name)} icon={Briefcase} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ContractViewModal.jsx:380: <Section title="Ship Details" icon={Ship} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\ContractViewModal.jsx:381: <FieldItem label="Ship Name" value={fmt(contract.ship_details?.ship_name ?? shipName)} icon={Ship} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ContractViewModal.jsx:383: <FieldItem label="Ship Type" value={fmt(contract.ship_details?.ship_type)} icon={Waves} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionEditModal.jsx:412: title="Company Placement"
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:170: <FieldItem label="Company" value={fmt(submission.company_name)} icon={Building} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:210: <Section title="Company Details" icon={Building} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:211: <FieldItem label="Company Name" value={fmt(companyDetails?.company_name ?? submission.company_name)} icon={Building} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:212: <FieldItem label="Company Type" value={fmt(companyDetails?.company_type_name || companyDetails?.company_type)} icon={Briefcase} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:220: <Section title="Ship Details" icon={Ship} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:221: <FieldItem label="Ship Name" value={fmt(shipDetails?.ship_name ?? submission.ship_name)} icon={Ship} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:223: <FieldItem label="Ship Type" value={fmt(shipDetails?.ship_type_name || shipDetails?.ship_type)} icon={Waves} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:351: <FieldItem label="Relationship" value={fmt(saNextOfKin.relationship)} icon={Heart} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVSubmissionViewModal.jsx:505: <FieldItem label="Company" value={fmt(ref.company_management_country)} icon={Building} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\CVViewModal.jsx:107: label="Target Company"
+src\components\dashboard\Components\Modal\ViewModal\FinanceViewModal.jsx:196: <Section title="Company" icon={Building} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\FinanceViewModal.jsx:197: <FieldItem label="Company Name" value={companyName} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\FinanceViewModal.jsx:198: <FieldItem label="Company ID" value={record.company} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\index.js:11: export { CompanyViewModal } from "./CompanyViewModal";
+src\components\dashboard\Components\Modal\ViewModal\index.js:14: export { ShipViewModal } from "./ShipViewModal";
+src\components\dashboard\Components\Modal\ViewModal\InterviewViewModal.jsx:225: <Section title="Company & Position" icon={Building} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\InterviewViewModal.jsx:226: <FieldItem label="Company" value={companyName} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:117: {ship.ship_name || "Unknown Ship"}
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:134: <Section title="Ship Information" icon={Ship} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:135: <FieldItem label="Ship Name" value={ship.ship_name} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:138: <FieldItem label="Ship Type (ID)" value={ship.ship_type} icon={Anchor} scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:142: <Section title="Flag & Ownership" icon={Building} scale={scale} columns={2}>
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:145: label="Company"
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:187: <FieldItem label="Created At" value={ship.created_at} format="datetime" scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\ShipViewModal.jsx:188: <FieldItem label="Updated At" value={ship.updated_at} format="datetime" scale={scale} />
+src\components\dashboard\Components\Modal\ViewModal\UserViewModal.jsx:368: <FieldItem label="Relationship" value={user.next_of_kin_relationship || user.emergency_contact_relationship} scale={scale} />
+src\components\dashboard\Components\PDF\SeafarerApplicationPDF.jsx:393: <LabelValue label="Relationship" value={p6.relationship} />
+src\components\dashboard\Components\PDF\SeafarerApplicationPDF.jsx:477: {["Company Name", "Rank", "Vessel / IMO", "Flag", "Sign On", "Sign Off", "Period", "Type"].map((h) => (
+src\components\dashboard\Components\PDF\SeafarerApplicationPDF.jsx:478: <Text key={h} style={[S.th, { flex: h === "Company Name" ? 2 : 1 }]}>{h}</Text>
+src\components\dashboard\Components\PDF\SeafarerApplicationPDF.jsx:499: {["No.", "Company / Country", "Position", "Name", "Tel", "Email"].map((h) => (
+src\components\dashboard\Components\PDF\SeafarerApplicationPDF.jsx:606: <LabelValue label="Ship" value={contract.ship_details?.ship_name ?? contract.ship_name} flex={2} />
+src\components\dashboard\Components\PDF\SeafarerApplicationPDF.jsx:607: <LabelValue label="Company" value={contract.company_details?.company_name ?? contract.company_name} flex={2} />
+src\components\dashboard\config\formConfigs.js:60: label: "Company Name",
+src\components\dashboard\config\formConfigs.js:62: placeholder: "Enter company name",
+src\components\dashboard\config\formConfigs.js:68: label: "Company Type",
+src\components\dashboard\config\formConfigs.js:73: { value: "Shipping", label: "Shipping" },
+src\components\dashboard\config\formConfigs.js:91: placeholder: "contact@company.com",
+src\components\dashboard\config\formConfigs.js:114: label: "Ship Name",
+src\components\dashboard\config\formConfigs.js:138: label: "Ship Type",
+src\components\dashboard\config\formConfigs.js:143: { value: "Container Ship", label: "Container Ship" },
+src\components\dashboard\config\formConfigs.js:144: { value: "Cruise Ship", label: "Cruise Ship" },
+src\components\dashboard\config\formConfigs.js:150: name: "company",
+src\components\dashboard\config\formConfigs.js:151: label: "Company",
+src\components\dashboard\config\formConfigs.js:153: placeholder: "Company name",
+src\components\dashboard\config\formConfigs.js:156: helpText: "Enter the company that owns this ship",
+src\components\dashboard\config\formConfigs.js:300: name: "company",
+src\components\dashboard\config\formConfigs.js:301: label: "Company",
+src\components\dashboard\config\formConfigs.js:303: placeholder: "Company name",
+src\components\dashboard\config\formConfigs.js:370: name: "company",
+src\components\dashboard\config\formConfigs.js:371: label: "Company",
+src\components\dashboard\config\formConfigs.js:400: * @param {string} entity - Entity type ('cv', 'company', 'ship', 'user', 'interview')
+src\components\dashboard\Content\Company.jsx:147: const [deleteType, setDeleteType] = useState(null); // 'company', 'ship', 'job_order', 'rank'
+src\components\dashboard\Content\Company.jsx:160: "phone", "address", "country", "contact_person", "contact_person_email", "contact_person_phone", "contact_phone", "owner", "notes", "open_positions", "tax_id", "registration_number", "company_group"
+src\components\dashboard\Content\Company.jsx:242: console.log("Could not load initial item in Companies", e);
+src\components\dashboard\Content\Company.jsx:320: notify.error("Company data not found");
+src\components\dashboard\Content\Company.jsx:329: notify.error("You do not have permission to edit companies");
+src\components\dashboard\Content\Company.jsx:344: notify.error("You do not have permission to delete companies");
+src\components\dashboard\Content\Company.jsx:348: setDeleteType("company");
+src\components\dashboard\Content\Company.jsx:356: notify.error("You do not have permission to add companies");
+src\components\dashboard\Content\Company.jsx:383: { key: "name", header: "Company Name" },
+src\components\dashboard\Content\Company.jsx:384: { key: "companyFlag", header: "Country" },
+src\components\dashboard\Content\Company.jsx:405: notify.success("Company details downloaded as PDF!");
+src\components\dashboard\Content\Company.jsx:438: notify.error("Ship data not found");
+src\components\dashboard\Content\Company.jsx:447: notify.error("You do not have permission to edit ships");
+src\components\dashboard\Content\Company.jsx:462: notify.error("You do not have permission to delete ships");
+src\components\dashboard\Content\Company.jsx:466: setDeleteType("ship");
+src\components\dashboard\Content\Company.jsx:474: notify.error("You do not have permission to add ships");
+src\components\dashboard\Content\Company.jsx:646: case "company":
+src\components\dashboard\Content\Company.jsx:650: case "ship":
+src\components\dashboard\Content\Company.jsx:724: { key: "name", header: "Ship Name" },
+src\components\dashboard\Content\Company.jsx:728: { key: "company", header: "Company" },
+src\components\dashboard\Content\Company.jsx:746: notify.success("Ship details downloaded as PDF!");
+src\components\dashboard\Content\Company.jsx:763: const emptyFilters = { name: "", status: "", company_type: "" };
+src\components\dashboard\Content\Company.jsx:808: { key: "name", header: "Company Name" },
+src\components\dashboard\Content\Company.jsx:809: { key: "companyFlag", header: "Country" },
+src\components\dashboard\Content\Company.jsx:837: "Companies"
+src\components\dashboard\Content\Company.jsx:839: notify.success("Companies exported to Excel!");
+src\components\dashboard\Content\Company.jsx:848: { key: "name", header: "Company Name" },
+src\components\dashboard\Content\Company.jsx:849: { key: "companyFlag", header: "Country" },
+src\components\dashboard\Content\Company.jsx:870: notify.success("Companies exported to PDF!");
+src\components\dashboard\Content\Company.jsx:879: { key: "name", header: "Ship Name" },
+src\components\dashboard\Content\Company.jsx:883: { key: "company", header: "Company" },
+src\components\dashboard\Content\Company.jsx:908: "Ships"
+src\components\dashboard\Content\Company.jsx:910: notify.success("Ships exported to Excel!");
+src\components\dashboard\Content\Company.jsx:919: { key: "name", header: "Ship Name" },
+src\components\dashboard\Content\Company.jsx:923: { key: "company", header: "Company" },
+src\components\dashboard\Content\Company.jsx:941: notify.success("Ships exported to PDF!");
+src\components\dashboard\Content\Company.jsx:1032: label: "Company Name",
+src\components\dashboard\Content\Company.jsx:1039: key: "companyFlag",
+src\components\dashboard\Content\Company.jsx:1165: label: "Ship Name",
+src\components\dashboard\Content\Company.jsx:1193: key: "associatedWithCompany",
+src\components\dashboard\Content\Company.jsx:1194: label: "Company",
+src\components\dashboard\Content\Company.jsx:1325: label: "Company Name",
+src\components\dashboard\Content\Company.jsx:1341: key: "company_type",
+src\components\dashboard\Content\Company.jsx:1342: label: "Company Type",
+src\components\dashboard\Content\Company.jsx:1346: { value: "Shipping Manning Companies", label: "Shipping Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1347: { value: "Cargo Manning Companies", label: "Cargo Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1348: { value: "Cruise & Hospitality Manning Companies", label: "Cruise & Hospitality Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1349: { value: "Offshore & Oil/Gas Manning Companies", label: "Offshore & Oil/Gas Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1350: { value: "Fishing Fleet Manning Companies", label: "Fishing Fleet Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1351: { value: "General Crew Manning Companies", label: "General Crew Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1352: { value: "Specialized Marine Manning Companies", label: "Specialized Marine Manning Companies" },
+src\components\dashboard\Content\Company.jsx:1354: { value: "Full Crew Management Companies", label: "Full Crew Management Companies" },
+src\components\dashboard\Content\Company.jsx:1362: label: "Ship Name",
+src\components\dashboard\Content\Company.jsx:1364: placeholder: "Search by ship name...",
+src\components\dashboard\Content\Company.jsx:1373: key: "company",
+src\components\dashboard\Content\Company.jsx:1374: label: "Company",
+src\components\dashboard\Content\Company.jsx:1376: placeholder: "All Companies",
+src\components\dashboard\Content\Company.jsx:1391: key: "ship_type",
+src\components\dashboard\Content\Company.jsx:1392: label: "Ship Type",
+src\components\dashboard\Content\Company.jsx:1396: { value: "Container Ships", label: "Container Ships" },
+src\components\dashboard\Content\Company.jsx:1399: { value: "Ro-Ro Ships", label: "Ro-Ro Ships" },
+src\components\dashboard\Content\Company.jsx:1400: { value: "Passenger Ships", label: "Passenger Ships" },
+src\components\dashboard\Content\Company.jsx:1440: //       key: "companyName",
+src\components\dashboard\Content\Company.jsx:1441: //       title: "Company",
+src\components\dashboard\Content\Company.jsx:1447: //       key: "shipName",
+src\components\dashboard\Content\Company.jsx:1448: //       title: "Ship",
+src\components\dashboard\Content\Company.jsx:1498: { key: "name", header: "Company Name" },
+src\components\dashboard\Content\Company.jsx:1506: { title: "Total Companies", value: counts.total || 0, trend: "Registered", icon: <Building size={20} />, accent: COLORS.primary || "#1E40AF", onClick: () => generateStatPdfReport("Total Companies", cols, companyData) },
+src\components\dashboard\Content\Company.jsx:1507: { title: "Active", value: counts["Active"] || 0, trend: "Operating", icon: <CheckCircle2 size={20} />, accent: "#10B981", onClick: () => generateStatPdfReport("Active Companies", cols, companyData.filter(d => d.status === "Active")) },
+src\components\dashboard\Content\Company.jsx:1508: { title: "Inactive", value: counts["Inactive"] || 0, trend: "Dormant", icon: <Clock size={20} />, accent: "#F59E0B", onClick: () => generateStatPdfReport("Inactive Companies", cols, companyData.filter(d => d.status === "Inactive")) },
+src\components\dashboard\Content\Company.jsx:1509: { title: "Prospects", value: counts["Prospect"] || 0, trend: "Leads", icon: <Building size={20} />, accent: "#6366F1", onClick: () => generateStatPdfReport("Prospect Companies", cols, companyData.filter(d => d.status === "Prospect")) },
+src\components\dashboard\Content\Company.jsx:1521: { key: "name", header: "Ship Name" },
+src\components\dashboard\Content\Company.jsx:1525: { key: "associatedWithCompany", header: "Company" },
+src\components\dashboard\Content\Company.jsx:1530: { title: "Total Ships", value: counts.total || 0, trend: "Fleet Size", icon: <Anchor size={20} />, accent: COLORS.primary || "#1E40AF", onClick: () => generateStatPdfReport("Total Ships", cols, shipData) },
+src\components\dashboard\Content\Company.jsx:1531: { title: "Active", value: counts["Active"] || 0, trend: "In Service", icon: <CheckCircle2 size={20} />, accent: "#10B981", onClick: () => generateStatPdfReport("Active Ships", cols, shipData.filter(d => d.status === "Active")) },
+src\components\dashboard\Content\Company.jsx:1532: { title: "Under Maintenance", value: counts["Under Maintenance"] || 0, trend: "Repairing", icon: <Clock size={20} />, accent: "#F59E0B", onClick: () => generateStatPdfReport("Ships Under Maintenance", cols, shipData.filter(d => d.status === "Under Maintenance")) },
+src\components\dashboard\Content\Company.jsx:1533: { title: "Inactive", value: counts["Inactive"] || 0, trend: "Laid Up", icon: <XCircle size={20} />, accent: "#EF4444", onClick: () => generateStatPdfReport("Inactive Ships", cols, shipData.filter(d => d.status === "Inactive")) },
+src\components\dashboard\Content\Company.jsx:1559: <Button variant="icon" onClick={handleRefreshCompanies} title="Refresh" scale={scale} style={{ width: 30, height: 30, borderRadius: 8, minHeight: 30 }}>
+src\components\dashboard\Content\Company.jsx:1562: {canCreate && <Button variant="primary" onClick={handleAddCompany} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Add Company</Button>}
+src\components\dashboard\Content\Company.jsx:1563: <Button variant="outline" onClick={handleExportCompaniesPdf} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Export PDF</Button>
+src\components\dashboard\Content\Company.jsx:1564: <Button variant="outline" onClick={handleExportCompaniesExcel} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Export Excel</Button>
+src\components\dashboard\Content\Company.jsx:1606: storageKey="companies"
+src\components\dashboard\Content\Company.jsx:1629: emptyStateMessage="No companies found."
+src\components\dashboard\Content\Company.jsx:1663: <Button variant="icon" onClick={handleRefreshShips} title="Refresh" scale={scale} style={{ width: 30, height: 30, borderRadius: 8, minHeight: 30 }}>
+src\components\dashboard\Content\Company.jsx:1666: {canCreate && <Button variant="primary" onClick={handleAddShip} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Add Ship</Button>}
+src\components\dashboard\Content\Company.jsx:1668: <Button variant="danger" onClick={() => setShowShipBulkDelete(true)} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Delete ({selectedShipIds.length})</Button>
+src\components\dashboard\Content\Company.jsx:1670: <Button variant="outline" onClick={handleExportShipsPdf} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Export PDF</Button>
+src\components\dashboard\Content\Company.jsx:1671: <Button variant="outline" onClick={handleExportShipsExcel} scale={scale} style={{ minHeight: 30, height: 30, padding: "0 14px", fontSize: 13, borderRadius: 8, fontWeight: 500 }}>Export Excel</Button>
+src\components\dashboard\Content\Company.jsx:1713: storageKey="ships"
+src\components\dashboard\Content\Company.jsx:1774: emptyStateMessage="No ships found."
+src\components\dashboard\Content\Company.jsx:1916: title="Filter Companies"
+src\components\dashboard\Content\Company.jsx:1938: title="Filter Ships"
+src\components\dashboard\Content\Company.jsx:1970: key: "company",
+src\components\dashboard\Content\Company.jsx:1971: label: "Company",
+src\components\dashboard\Content\Company.jsx:1973: placeholder: "All Companies",
+src\components\dashboard\Content\Company.jsx:1977: key: "ship_name",
+src\components\dashboard\Content\Company.jsx:1978: label: "Ship Name",
+src\components\dashboard\Content\Company.jsx:1980: placeholder: "All Ships",
+src\components\dashboard\Content\Company.jsx:2082: title="Delete Selected Companies"
+src\components\dashboard\Content\Company.jsx:2092: title="Delete Selected Ships"
+src\components\dashboard\Content\CVSubmissions.jsx:458: { key: "company", header: "Company" },
+src\components\dashboard\Content\CVSubmissions.jsx:504: key: "company",
+src\components\dashboard\Content\CVSubmissions.jsx:505: label: "Company",
+src\components\dashboard\Content\CVSubmissions.jsx:618: { key: "company", header: "Company" },
+src\components\dashboard\Content\CVSubmissions.jsx:649: { key: "company", header: "Company" },
+src\components\dashboard\Content\Documents.jsx:164: { key: "ship_name", label: "Ship Name", type: "text", placeholder: "Search by ship name..." },
+src\components\dashboard\Content\Documents.jsx:178: key: "company", label: "Company", type: "select",
+src\components\dashboard\Content\Documents.jsx:179: placeholder: "All Companies",
+src\components\dashboard\Content\Documents.jsx:231: { key: "ship", header: "Ship", render: (r) => typeof r.ship === 'object' && r.ship ? r.ship.name : (r.ship || r.ship_name || "N/A") },
+src\components\dashboard\Content\Documents.jsx:232: { key: "company", header: "Company", render: (r) => typeof r.company === 'object' && r.company ? (r.company.company_name || r.company.name) : (r.company || r.company_name || "N/A") },
+src\components\dashboard\Content\Documents.jsx:445: { key: "ship", label: "Ship", sortable: true },
+src\components\dashboard\Content\Documents.jsx:446: { key: "company", label: "Company", sortable: true },
+src\components\dashboard\Content\Documents.jsx:530: "Ship": c.ship,
+src\components\dashboard\Content\Documents.jsx:531: "Company": c.company,
+src\components\dashboard\Content\Documents.jsx:554: { header: "Ship", key: "ship" },
+src\components\dashboard\Content\Documents.jsx:555: { header: "Company", key: "company" },
+src\components\dashboard\Content\Documents.jsx:693: const empty = { user_name: "", ship_name: "", status: "", expiry_status: "", start_date_from: "", start_date_to: "", company: "", user: "" };
+src\components\dashboard\Content\Finance.jsx:140: result.data.company_name || "Unknown Company";
+src\components\dashboard\Content\Finance.jsx:147: console.error("Failed to load user/company details", error);
+src\components\dashboard\Content\Finance.jsx:192: key: "company",
+src\components\dashboard\Content\Finance.jsx:193: title: "Company",
+src\components\dashboard\Content\Finance.jsx:236: const empty = { status: "", user: "", company: "", record_type: "", start_date_from: "", start_date_to: "" };
+src\components\dashboard\Content\Finance.jsx:292: key: "company",
+src\components\dashboard\Content\Finance.jsx:293: label: "Company",
+src\components\dashboard\Content\Finance.jsx:295: placeholder: "All Companies",
+src\components\dashboard\Content\Interviews.jsx:150: "candidate_name", "candidate_email", "company_name", "position_name", "date", "time",
+src\components\dashboard\Content\Interviews.jsx:248: companyId: interview.company || "Unknown Company ID",
+src\components\dashboard\Content\Interviews.jsx:365: { key: "company", header: "Company" },
+src\components\dashboard\Content\Interviews.jsx:430: { key: "company", header: "Company" },
+src\components\dashboard\Content\Interviews.jsx:463: { key: "company", header: "Company" },
+src\components\dashboard\Content\Interviews.jsx:503: key: "company",
+src\components\dashboard\Content\Interviews.jsx:504: label: "Company",
+src\components\dashboard\Content\Interviews.jsx:506: placeholder: "All Companies",
+src\components\dashboard\Content\Interviews.jsx:701: key: "positionCompany",
+src\components\dashboard\Content\Interviews.jsx:702: label: "Position & Company",
+src\components\dashboard\Content\Interviews.jsx:772: { key: "company_name", label: "Company", render: (_, row) => row.company || "-" },
+src\components\dashboard\Content\JobVacancies.jsx:123: { key: "company", label: "Company", sortable: true },
+src\components\dashboard\Content\JobVacancies.jsx:124: { key: "vessel", label: "Vessel / Ship", sortable: true },
+src\components\dashboard\Content\JobVacancies.jsx:173: { key: "company", label: "Company", type: "text", placeholder: "Search company..." },
+src\components\dashboard\Content\JobVacancies.jsx:242: setActiveFilters({ rank: "", status: "", company: "" });
+src\components\dashboard\Content\Overview.jsx:44: "Company registered": "management",
+src\components\dashboard\Content\Overview.jsx:114: { key: "name", header: "Company Name", render: (r) => r.company_name || r.name || "N/A" },
+src\components\dashboard\Content\Overview.jsx:120: { key: "company_name", header: "Company", render: (r) => r.company_name || r.name || "N/A" },
+src\components\dashboard\Content\Overview.jsx:139: { title: "Total Companies", value: kpis.totalCompanies.toString(), trend: "Registered companies", icon: "🏢", accent: "#1D4ED8", onClick: () => generateStatPdfReport("Registered Companies", companyCols, companies) },
+src\components\dashboard\Content\Overview.jsx:140: { title: "Open Positions", value: kpis.openPositions.toString(), trend: "Across all companies", icon: "💼", accent: "#166534", onClick: () => generateStatPdfReport("Open Positions", positionsCols, allPositions) },
+src\components\dashboard\Content\Overview.jsx:157: companies.forEach((c) => pushIfRecent(get(c), { id: c.id, title: "Company registered", name: c.company_name || c.name, timestamp: formatTimestamp(get(c)) }));
+src\components\dashboard\Content\Overview.jsx:202: items.push({ id: user.id, type: "cvs", name: `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Unknown", position: user.ranks?.[0]?.rank?.name || "Not Specified", company: "N/A", status: "pending", submittedDate: user.created_at.split("T")[0], interviewDate: null });
+src\components\dashboard\Content\Overview.jsx:209: items.push({ id: interview.id, type: "interviews", name: interview.candidate_name || "Unknown Candidate", position: interview.position || "Not Specified", company: interview.company_name || "N/A", status: "interview", submittedDate: null, interviewDate: interview.scheduled_date });
+src\components\dashboard\Content\SearchResults.jsx:62: { key: "companies", label: "Companies", count: normalisedResults.companies.length },
+src\components\dashboard\Content\SearchResults.jsx:63: { key: "ships", label: "Ships", count: normalisedResults.ships.length },
+src\components\dashboard\Content\SearchResults.jsx:312: : "Use the search bar in the header to find Seafarers, Companies, Ships, CV Submissions, and Contracts."}
+src\components\dashboard\Content\Users.jsx:637: const dynamicShipNames = useMemo(() => getUniqueValuesForKey(backendUsers, "ship_name"), [backendUsers, getUniqueValuesForKey]);
+src\components\dashboard\Content\Users.jsx:737: key: "company_name",
+src\components\dashboard\Content\Users.jsx:738: label: "Company Name",
+src\components\dashboard\Content\Users.jsx:743: key: "ship_name",
+src\components\dashboard\Content\Users.jsx:744: label: "Ship Name",
+src\components\dashboard\Content\Users.jsx:749: key: "company_type",
+src\components\dashboard\Content\Users.jsx:750: label: "Company Type",
+src\components\dashboard\Content\Users.jsx:753: { value: "Shipping Manning Companies", label: "Shipping Manning Companies" },
+src\components\dashboard\Content\Users.jsx:754: { value: "Cargo Manning Companies", label: "Cargo Manning Companies" },
+src\components\dashboard\Content\Users.jsx:755: { value: "Cruise & Hospitality Manning Companies", label: "Cruise & Hospitality Manning Companies" },
+src\components\dashboard\Content\Users.jsx:756: { value: "Offshore & Oil/Gas Manning Companies", label: "Offshore & Oil/Gas Manning Companies" },
+src\components\dashboard\Content\Users.jsx:757: { value: "Fishing Fleet Manning Companies", label: "Fishing Fleet Manning Companies" },
+src\components\dashboard\Content\Users.jsx:758: { value: "General Crew Manning Companies", label: "General Crew Manning Companies" },
+src\components\dashboard\Content\Users.jsx:759: { value: "Specialized Marine Manning Companies", label: "Specialized Marine Manning Companies" },
+src\components\dashboard\Content\Users.jsx:761: { value: "Full Crew Management Companies", label: "Full Crew Management Companies" },
+src\components\dashboard\Content\Users.jsx:765: key: "ship_type",
+src\components\dashboard\Content\Users.jsx:766: label: "Ship Type",
+src\components\dashboard\Content\Users.jsx:769: { value: "Container Ships", label: "Container Ships" },
+src\components\dashboard\Content\Users.jsx:772: { value: "Ro-Ro Ships", label: "Ro-Ro Ships" },
+src\components\dashboard\Content\Users.jsx:773: { value: "Passenger Ships", label: "Passenger Ships" },
+src\components\dashboard\context\DashboardDataContext.jsx:80: if (!force && isCacheValid("companies") && companies.length > 0) {
+src\components\dashboard\context\DashboardDataContext.jsx:100: console.error("Failed to fetch companies:", error);
+src\components\dashboard\context\DashboardDataContext.jsx:223: if (!force && isCacheValid("ships") && ships.length > 0) {
+src\components\dashboard\context\DashboardDataContext.jsx:235: console.error("Failed to fetch ships:", error);
+src\components\dashboard\context\DashboardDataContext.jsx:266: console.error("Failed to fetch ships by company:", error);
+src\components\dashboard\context\DashboardDataContext.jsx:299: console.error("Failed to batch fetch companies:", error);
+src\components\dashboard\context\DashboardDataContext.jsx:308: if (!id) return "Unknown Company";
+src\components\dashboard\context\DashboardDataContext.jsx:310: return company?.company_name || company?.name || "Unknown Company";
+src\components\dashboard\context\DashboardDataContext.jsx:371: label: c.company_name || c.name || "Unknown Company"
+src\components\dashboard\hooks\useFormModal.js:36: *   successMessage: "Company saved successfully",
+src\components\dashboard\hooks\useGlobalSearch.js:79: "company",
+src\components\dashboard\hooks\useGlobalSearch.js:94: "company",
+src\components\dashboard\hooks\useGlobalSearch.js:109: searchObject(record, ["user", "company", "startDate", "endDate"])
+src\components\form\modals\NextOfKinModal.jsx:65: placeholder="Relationship"
+src\components\form\modals\ReferenceModal.jsx:63: placeholder="Company Name"
+src\components\form\modals\SeaServiceModal.jsx:78: placeholder="Company Name"
+src\components\form\steps\DeclarationForm.jsx:257: parent or subsidiary or associated or affiliated company of the Managers (together referred to as "the Companies") for the
+src\components\form\steps\EmergencyForm.jsx:101: { key: "relationship", label: "Relationship" },
+src\components\form\steps\EmergencyForm.jsx:139: placeholder="Select Relationship"
+src\components\form\steps\ReferencesForm.jsx:81: { key: "company_name", label: "Company" },
+src\components\form\steps\SeaServiceForm.jsx:151: { key: "company_name", label: "Company" },
+src\components\landing\QuickApply.jsx:502: label: `${vacancy.rank_name} ${vacancy.ship_name ? `@ ${vacancy.ship_name}` : ""} ${vacancy.company_name ? `(${vacancy.company_name})` : ""}`.trim()
+src\components\landing\layout\Footer.jsx:9: value: "info@sakrshipping.com",
+src\components\landing\layout\Footer.jsx:10: link: "mailto:info@sakrshipping.com",
+src\components\landing\layout\Footer.jsx:13: value: "sakrshipping@sakrshipping.com",
+src\components\landing\layout\Footer.jsx:14: link: "mailto:sakrshipping@sakrshipping.com",
+src\components\landing\layout\Footer.jsx:16: { value: "crew@sakrshipping.com", link: "mailto:crew@sakrshipping.com" },
+src\components\landing\layout\Header.jsx:36: alt="Sakr Shipping Logo"
+src\components\landing\pages\AboutPage.jsx:37: title: "Partnership",
+src\components\landing\pages\AboutPage.jsx:39: "We believe in long-term relationships, working closely with ship owners, principals, and seafarers to achieve shared success.",
+src\components\landing\pages\AboutPage.jsx:45: "We know that to remain a successful company we must work together, frequently rise above organizational, geographical, and cultural barriers.",
+src\components\landing\pages\AboutPage.jsx:72: alt="Container ship at port with stacked containers"
+src\components\landing\pages\AboutPage.jsx:126: alt="Aerial view of ship on blue ocean"
+src\components\landing\pages\ContactPage.jsx:53: "info@sakrshipping.com",
+src\components\landing\pages\ContactPage.jsx:54: "sakrshipping@sakrshipping.com",
+src\components\landing\pages\ContactPage.jsx:55: "crew@sakrshipping.com",
+src\components\landing\pages\HomePage.jsx:251: alt="Port Said maritime view with ships"
+src\config\formConfig.js:160: { value: "Ship Security Officer", label: "Ship Security Officer" },
+src\config\formConfig.js:185: { value: "High Voltage Training – Operation of Ship (1000V and More)", label: "High Voltage Training – Operation of Ship (1000V and More)" },
+src\config\formConfig.js:194: { value: "Ships Cook Certificate (MLC 2006)", label: "Ships Cook Certificate (MLC 2006)" },
+src\config\formConfig.js:295: { value: "Qualified Ship’s Cook (MLC 2006)", label: "Qualified Ship’s Cook (MLC 2006)" },
+src\config\formConfig.js:296: { value: "Qualified Ship’s Cook (MLC 2006) Endorsement", label: "Qualified Ship’s Cook (MLC 2006) Endorsement" },
+src\config\formConfig.js:498: RELATIONSHIP: "kin_relationship",
+src\config\formConfig.js:506: RELATIONSHIP: "relationship",
+src\config\formConfig.js:521: COMPANY: "company_name",
+src\config\formConfig.js:673: COMPANY_NAME: "company_name",
+src\config\formConfig.js:902: next_of_kin_relationship: "next_of_kin_relationship",
+src\config\formConfig.js:977: company_name: "company_name",
+src\config\modalValidation.js:170: required: "Company name is required",
+src\config\modalValidation.js:171: ...maxLen(100, "Company name"),
+src\config\modalValidation.js:194: required: "Company name is required",
+src\config\modalValidation.js:195: ...maxLen(100, "Company name"),
+src\hooks\useDashboardData.js:3: export { useCompanies } from "./dashboard/useCompanies";
+src\hooks\useDashboardData.js:4: export { useShips } from "./dashboard/useShips";
+src\hooks\dashboard\useCompanies.js:49: const errorMessage = err.message || "Failed to load companies";
+src\hooks\dashboard\useCompanies.js:69: const errorMessage = err.message || "Failed to load company";
+src\hooks\dashboard\useCompanies.js:83: notify.error("You do not have permission to create companies");
+src\hooks\dashboard\useCompanies.js:99: const errorMessage = err.message || "Failed to create company";
+src\hooks\dashboard\useCompanies.js:115: notify.error("You do not have permission to update companies");
+src\hooks\dashboard\useCompanies.js:137: const errorMessage = err.message || "Failed to update company";
+src\hooks\dashboard\useCompanies.js:153: notify.error("You do not have permission to delete companies");
+src\hooks\dashboard\useCompanies.js:171: const errorMessage = err.message || "Failed to delete company";
+src\hooks\dashboard\useCompanies.js:189: console.warn("Failed to load company stats:", err);
+src\hooks\dashboard\useShips.js:49: const errorMessage = err.message || "Failed to load ships";
+src\hooks\dashboard\useShips.js:69: const errorMessage = err.message || "Failed to load ship";
+src\hooks\dashboard\useShips.js:83: notify.error("You do not have permission to create ships");
+src\hooks\dashboard\useShips.js:99: const errorMessage = err.message || "Failed to create ship";
+src\hooks\dashboard\useShips.js:115: notify.error("You do not have permission to update ships");
+src\hooks\dashboard\useShips.js:132: const errorMessage = err.message || "Failed to update ship";
+src\hooks\dashboard\useShips.js:148: notify.error("You do not have permission to delete ships");
+src\hooks\dashboard\useShips.js:164: const errorMessage = err.message || "Failed to delete ship";
+src\services\Auth\config.js:54: COMPANIES: "/companies/",
+src\services\Auth\config.js:56: COMPANY_STATS: "/companies/stats/",
+src\services\Auth\config.js:85: SHIPS: "/ships/",
+src\services\Dashboard\aiApi.js:8: baseURL: "https://backend.sakrshipping.com", // No /api/ here
+src\services\Dashboard\companiesApi.js:32: if (filters.company_type) params.append("company_type", getVal(filters.company_type));
+src\services\Dashboard\companiesApi.js:45: : "/companies/";
+src\services\Dashboard\companiesApi.js:65: console.error("Failed to fetch companies:", error);
+src\services\Dashboard\companiesApi.js:95: console.error("Failed to create company:", error);
+src\services\Dashboard\companiesApi.js:165: console.error("Failed to batch fetch companies:", error);
+src\services\Dashboard\companiesApi.js:195: console.error("Failed to search companies:", error);
+src\services\Dashboard\companiesApi.js:228: console.error("Failed to fetch company stats:", error);
+src\services\Dashboard\documentsApi.js:32: if (filters.company) params.append("company", getVal(filters.company));
+src\services\Dashboard\documentsApi.js:33: if (filters.ship) params.append("ship", getVal(filters.ship));
+src\services\Dashboard\documentsApi.js:34: if (filters.ship_name) params.append("ship_name", getVal(filters.ship_name));
+src\services\Dashboard\financeApi.js:34: if (filters.company) params.append("company", getVal(filters.company));
+src\services\Dashboard\financeApi.js:186: if (filters.company) params.append("company", filters.company);
+src\services\Dashboard\interviewsApi.js:33: if (filters.company) params.append("company", getVal(filters.company));
+src\services\Dashboard\shipsApi.js:35: if (filters.company) params.append("company", getVal(filters.company));
+src\services\Dashboard\shipsApi.js:38: if (filters.ship_type) params.append("ship_type", getVal(filters.ship_type));
+src\services\Dashboard\shipsApi.js:39: if (filters.vessel_type) params.append("ship_type", getVal(filters.vessel_type));
+src\services\Dashboard\shipsApi.js:48: const endpoint = queryString ? `/ships/?${queryString}` : "/ships/";
+src\services\Dashboard\shipsApi.js:68: console.error("Failed to fetch ships:", error);
+src\services\Dashboard\shipsApi.js:98: console.error("Failed to create ship:", error);
+src\services\Dashboard\vacanciesApi.js:36: if (filters.company)   params.append("company",   filters.company);
+src\services\Dashboard\vacanciesApi.js:45: : "/companies/vacancies/";
+src\services\Form\userService.js:782: companies: "/companies/",
+src\services\Form\userService.js:802: "companies",
+src\services\Form\userService.js:842: companies: "/companies/",
+src\services\Form\userService.js:926: companies: "/companies/",
+src\services\Form\userService.js:1017: formData.append("company", cvData.company);
+src\utils\constants.js:273: //   BACKGROUND: "src/assets/ship-bg.jpg",
+src\utils\constants.js:289: //     "src/assets/icons/a_partnership.png",
+src\utils\contractPdfGenerator.jsx:208: <div class="dg-label">Name of Principal / Shipowner:</div><div class="dg-value">${esc(shipownerName)}</div>
+src\utils\contractPdfGenerator.jsx:209: <div class="dg-label">Address of Principal / Shipowner:</div><div class="dg-value">${esc(shipownerAddress)}</div>
+src\utils\contractPdfGenerator.jsx:210: <div class="dg-label">Name of Ship Manager:</div><div class="dg-value">${esc(shipManagerName)}</div>
+src\utils\contractPdfGenerator.jsx:211: <div class="dg-label">Address of Ship Manager:</div><div class="dg-value">${esc(shipManagerAddress)}</div>
+src\utils\dashboardMappings.js:10: companyId: "company",
+src\utils\draftUtils.js:53: company: "Draft.SeaService.company",
+src\utils\formCompletionChecker.js:143: kinRelationship: "Relationship",
+src\utils\formCompletionChecker.js:144: kin_relationship: "Relationship",
+src\utils\RHFvalidationRules.js:159: required: "Relationship is required",
+src\utils\RHFvalidationRules.js:357: company_name: { required: "Company name is required" },
+src\utils\RHFvalidationRules.js:485: "kin_relationship",
+src\utils\dashboard\brandedCVGenerator.jsx:257: <div class="fi"><div class="fi-l">Relationship</div><div class="fi-v">${fmt(kin.relationship)}</div></div>
+src\utils\dashboard\brandedCVGenerator.jsx:309: <thead><tr><th>Company</th><th>Rank</th><th>Vessel & IMO</th><th>Flag</th><th>Sign On</th><th>Sign Off</th><th>Period</th><th>Vessel Type</th></tr></thead>
+src\utils\dashboard\fieldConfigs.js:45: name: "company_name",
+src\utils\dashboard\fieldConfigs.js:46: label: "Company Name",
+src\utils\dashboard\fieldConfigs.js:50: placeholder: "Enter the Company Name",
+src\utils\dashboard\fieldConfigs.js:53: required: "Company name is required",
+src\utils\dashboard\fieldConfigs.js:54: minLength: { value: 2, message: "Company name must be at least 2 characters" },
+src\utils\dashboard\fieldConfigs.js:77: name: "company_type",
+src\utils\dashboard\fieldConfigs.js:78: label: "Company Type",
+src\utils\dashboard\fieldConfigs.js:85: { value: "Cargo Manning Companies", label: "Cargo Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:86: { value: "Cruise & Hospitality Manning Companies", label: "Cruise & Hospitality Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:87: { value: "Fishing Fleet Manning Companies", label: "Fishing Fleet Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:88: { value: "Full Crew Management Companies", label: "Full Crew Management Companies" },
+src\utils\dashboard\fieldConfigs.js:89: { value: "General Crew Manning Companies", label: "General Crew Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:90: { value: "Offshore & Oil/Gas Manning Companies", label: "Offshore & Oil/Gas Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:91: { value: "Ship Owner", label: "Ship Owner" },
+src\utils\dashboard\fieldConfigs.js:92: { value: "Shipping Manning Companies", label: "Shipping Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:93: { value: "Specialized Marine Manning Companies", label: "Specialized Marine Manning Companies" },
+src\utils\dashboard\fieldConfigs.js:98: required: "Company type is required",
+src\utils\dashboard\fieldConfigs.js:122: name: "company_flag",
+src\utils\dashboard\fieldConfigs.js:167: placeholder: "info@company.com",
+src\utils\dashboard\fieldConfigs.js:184: placeholder: "https://www.company.com",
+src\utils\dashboard\fieldConfigs.js:219: name: "ship_name",
+src\utils\dashboard\fieldConfigs.js:220: label: "Ship Name",
+src\utils\dashboard\fieldConfigs.js:227: required: "Ship name is required",
+src\utils\dashboard\fieldConfigs.js:228: minLength: { value: 2, message: "Ship name must be at least 2 characters" },
+src\utils\dashboard\fieldConfigs.js:249: name: "company",
+src\utils\dashboard\fieldConfigs.js:250: label: "Company",
+src\utils\dashboard\fieldConfigs.js:254: placeholder: "Select Company",
+src\utils\dashboard\fieldConfigs.js:257: required: "Company is required",
+src\utils\dashboard\fieldConfigs.js:305: name: "ship_type",
+src\utils\dashboard\fieldConfigs.js:306: label: "Ship Type",
+src\utils\dashboard\fieldConfigs.js:310: placeholder: "Select Ship Type",
+src\utils\dashboard\fieldConfigs.js:313: required: "Ship type is required",
+src\utils\dashboard\fieldConfigs.js:628: name: "company",
+src\utils\dashboard\fieldConfigs.js:629: label: "Company",
+src\utils\dashboard\fieldConfigs.js:633: placeholder: "Select Company",
+src\utils\dashboard\fieldConfigs.js:636: required: "Company is required",
+src\utils\dashboard\fieldConfigs.js:849: name: "company",
+src\utils\dashboard\fieldConfigs.js:850: label: "Company",
+src\utils\dashboard\fieldConfigs.js:854: placeholder: "Select Company",
+src\utils\dashboard\fieldConfigs.js:857: required: "Company is required",
+src\utils\dashboard\fieldConfigs.js:936: name: "company",
+src\utils\dashboard\fieldConfigs.js:937: label: "Company",
+src\utils\dashboard\fieldConfigs.js:941: placeholder: "Select Company",
+src\utils\dashboard\fieldConfigs.js:944: required: "Company is required",
+src\utils\dashboard\fieldConfigs.js:951: name: "ship",
+src\utils\dashboard\fieldConfigs.js:952: label: "Ship (Optional)",
+src\utils\dashboard\fieldConfigs.js:956: placeholder: "Select Ship (Optional)",
+src\utils\dashboard\fieldConfigs.js:961: dependsOn: "company",
+src\utils\dashboard\fieldConfigs.js:1236: name: "company",
+src\utils\dashboard\fieldConfigs.js:1237: label: "Applying to Company",
+src\utils\dashboard\fieldConfigs.js:1241: placeholder: "Select Company",
+src\utils\dashboard\fieldConfigs.js:1322: name: "company",
+src\utils\dashboard\fieldConfigs.js:1323: label: "Company",
+src\utils\dashboard\fieldConfigs.js:1327: placeholder: "Select Company",
+src\utils\dashboard\fieldConfigs.js:1330: required: "Company is required",
+src\utils\dashboard\fieldConfigs.js:1336: name: "ship",
+src\utils\dashboard\fieldConfigs.js:1337: label: "Ship (Optional)",
+src\utils\dashboard\fieldConfigs.js:1341: placeholder: "Select Ship",
+src\utils\dashboard\fieldConfigs.js:1672: * // ["company_name", "company_type", "contact_email", ...]
