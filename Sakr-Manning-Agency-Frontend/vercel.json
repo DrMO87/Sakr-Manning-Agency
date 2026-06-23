@@ -1,4 +1,5 @@
 {
+  "name": "sakr-manning-agency-frontend",
   "rewrites": [
     {
       "source": "/(.*)",

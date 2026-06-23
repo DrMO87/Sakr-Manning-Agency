@@ -32,3 +32,5 @@ admin_sections_breakdown-1.md
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+.vercel

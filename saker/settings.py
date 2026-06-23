@@ -62,8 +62,8 @@ ALLOWED_HOSTS = [
     "api.sakrshipping.com",
     "api.backend.hs.vc",
     "localhost",
-    "127.0.0.1"
-
+    "127.0.0.1",
+    ".onrender.com"
 ]
 
 
@@ -101,6 +101,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -265,6 +266,7 @@ GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET', 'GOCSPX-S
 GOOGLE_CLIENT_ID = GOOGLE_OAUTH2_CLIENT_ID
 GOOGLE_CLIENT_SECRET = GOOGLE_OAUTH2_CLIENT_SECRET
 CORS_ALLOWED_ORIGINS = [
+    "https://sakr-manning-agency-frontend.vercel.app",
     "https://sakr-maritime.vercel.app",
     "https://test.sakrshipping.com",
     "http://localhost:5173",

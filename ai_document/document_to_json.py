@@ -1632,15 +1632,18 @@ def _extract_declaration(text: str) -> Declaration:
     )
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+import os
+import re
+import json
+from .confidence_schemas import SeafarerApplicationWithConfidence
+
+# ------------------------------------------------------------------------------
 # MAIN FUNCTION
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 def convert_text_to_json(extracted_text: str, parsed_tables: list = None) -> dict:
     """
-    Convert extracted CV text to structured data.
-    First attempts LLM extraction (Option D) if OPENAI_API_KEY is configured.
-    Falls back to native table parsing + regex (Option C).
+    Convert extracted CV text to structured data using multi-stage LLM extraction with confidence scoring.
     """
     global CURRENT_TABLES
     CURRENT_TABLES = parsed_tables or []
@@ -1662,12 +1665,9 @@ def convert_text_to_json(extracted_text: str, parsed_tables: list = None) -> dic
     print(f"CV Validation: Found {keyword_count} maritime keywords, text length: {len(text.strip())}")
 
     if keyword_count < 5 or len(text.strip()) < 200:
-        print("⚠️ DOCUMENT IS NOT A VALID MARITIME CV - RETURNING EMPTY DATA")
-        return SeafarerApplication().to_numbered_dict()
+        print("?? DOCUMENT IS NOT A VALID MARITIME CV - RETURNING EMPTY DATA")
+        return {"validation_error": "Document is not a valid maritime CV or contains too little text"}
 
-    # ==========================================
-    # OPTION D: LLM Local Extraction (Highest Accuracy)
-    # ==========================================
     try:
         import os
         USE_LOCAL_LLM = os.environ.get("USE_LOCAL_LLM", "true").lower() == "true"
@@ -1682,68 +1682,42 @@ def convert_text_to_json(extracted_text: str, parsed_tables: list = None) -> dic
         if groq_api_key or google_api_key or USE_LOCAL_LLM:
             llm = None
             if groq_api_key:
-                print("🧠 Running LLM Extraction via Groq (llama-3.3-70b-versatile) (Option D)...")
+                print("?? Running Confidence LLM Extraction via Groq (llama-3.3-70b-versatile)...")
                 from langchain_groq import ChatGroq
                 llm = ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=groq_api_key, temperature=0)
             elif google_api_key:
-                print("🧠 Running LLM Extraction via Google Gemini (gemini-1.5-pro) (Option D)...")
+                print("?? Running Confidence LLM Extraction via Google Gemini (gemini-1.5-pro)...")
                 from langchain_google_genai import ChatGoogleGenerativeAI
                 llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=google_api_key, temperature=0)
             else:
-                print("🧠 Running LLM Extraction via Local Ollama (qwen2.5) (Option D)...")
+                print("?? Running Confidence LLM Extraction via Local Ollama (qwen2.5)...")
                 from langchain_ollama import ChatOllama
                 llm = ChatOllama(model="qwen2.5:latest", temperature=0)
             
-            structured_llm = llm.with_structured_output(SeafarerApplication)
+            structured_llm = llm.with_structured_output(SeafarerApplicationWithConfidence)
             
             prompt = f"""You are an expert Maritime HR Assistant. Your task is to extract all relevant seafarer CV data from the following document into the provided JSON schema.
 
-CRITICAL INSTRUCTIONS (FEW-SHOT TRAINING):
+CRITICAL INSTRUCTIONS:
+- You are returning a 'Confidence Schema'. This means every field is an object containing 'value', 'confidence', and 'doubted'.
+- 'confidence' must be a float between 0.0 and 1.0.
+- Set 'doubted' to true if you are unsure about the extraction, if it might be a hallucination, or if the source text was ambiguous.
 - ALWAYS map the applicant's actual name to `full_name`. DO NOT map field labels like "Name:", "Marital Status", or "Nationality" to the `full_name` field.
-- Example 1 (Bad Output): {{"full_name": "Marital Status", "date_of_birth": "Single"}} -> This is WRONG!
-- Example 2 (Good Output): {{"full_name": "John Doe", "date_of_birth": "1990-01-01", "marital_status": {{"single": true}}}} -> This is CORRECT!
 - If the CV uses a compact layout like "Name / Marital Status: John Doe / Single", split the values correctly.
 
 TEXT:
 {text}
 """
             if CURRENT_TABLES:
-                prompt += f"\n\nNATIVE TABLES (Use this to match exact columns if text is confusing):\n{CURRENT_TABLES}"
+                prompt += f"\\n\\nNATIVE TABLES (Use this to match exact columns if text is confusing):\\n{CURRENT_TABLES}"
             
+            print("Invoking LLM...")
             result = structured_llm.invoke(prompt)
-            print("✅ LLM Extraction complete.")
+            print("? LLM Extraction complete.")
             return result.to_numbered_dict()
     except Exception as e:
-        print(f"⚠️ Local LLM extraction failed: {e}. Falling back to Native Table Parser (Option C)...")
+        print(f"?? Local LLM extraction failed: {e}. Falling back to old parser...")
 
-    # ==========================================
-    # OPTION C: Native Table + Regex Parser Fallback
-    # ==========================================
-    print("⚙️ Extracting data with Pydantic + Regex (Option C)...")
-
-
-    print("✅ Extracting data with Pydantic + Regex (no AI model)...")
-
-    personal = _extract_personal(text)
-    applicant_name = personal.full_name or ""
-
-    app = SeafarerApplication(
-        **{
-            "1_personal_details": personal,
-            "2_education": _extract_education(text),
-            "3_contact_details": _extract_contact(text),
-            "4_travel_documents": _extract_travel_docs(text),
-            "5_professional_qualification_certificate_of_competency": _extract_qualifications(text),
-            "6_next_of_kin_emergency_contact": _extract_next_of_kin(text),
-            "7_health_certificates_and_vaccinations": _extract_health(text),
-            "8_marine_courses": _extract_marine_courses(text),
-            "9_complete_sea_service_details": _extract_sea_service(text, applicant_name),
-            "10_references": _extract_references(text),
-            "11_declaration": _extract_declaration(text),
-            "12_for_office_use_only": OfficeUseOnly(),
-        }
-    )
-
-    result = app.to_numbered_dict()
-    print(f"✅ Extraction complete. Applicant: {applicant_name or 'Unknown'}")
-    return result
+    # Fallback to empty if LLM fails completely
+    print("?? LLM Extraction Failed entirely.")
+    return SeafarerApplicationWithConfidence().to_numbered_dict()

@@ -145,6 +145,26 @@ class DocumentProcessor:
             result['extracted_text'] = '\n\n'.join(text_content)
             result['page_count'] = len(doc)
             
+            # Try to extract tables using pdfplumber if available
+            if PDFPLUMBER_AVAILABLE:
+                tables_data = []
+                try:
+                    with pdfplumber.open(file_path) as pdf:
+                        for page in pdf.pages:
+                            extracted_tables = page.extract_tables()
+                            for table in extracted_tables:
+                                if table:
+                                    # Clean up table (remove Nones)
+                                    clean_table = [[str(cell).strip() if cell else "" for cell in row] for row in table]
+                                    tables_data.append(clean_table)
+                                    # Also append a text version of the table to the extracted text
+                                    table_text = "\n".join([" | ".join(row) for row in clean_table])
+                                    text_content.append(table_text)
+                    result['tables'] = tables_data
+                    result['extracted_text'] = '\n\n'.join(text_content)
+                except Exception as table_e:
+                    logger.warning(f"Failed to extract tables with pdfplumber: {table_e}")
+            
         except Exception as e:
             logger.warning(f"PyMuPDF failed, trying PyPDF2: {str(e)}")
             

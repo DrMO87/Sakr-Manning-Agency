@@ -3532,10 +3532,14 @@ class DocumentUploadView(APIView):
                         
                     structured_json = convert_text_to_json(cleaned_text, parsed_tables=parsed_tables)
 
+                    from .confidence_schemas import unwrap_confidence, get_doubted_fields
+                    unwrapped_json = unwrap_confidence(structured_json)
+                    doubted_fields = get_doubted_fields(structured_json)
+
                     # Ensure structured_json is a dictionary
                     if not isinstance(structured_json, dict):
                         logger.error(f"convert_text_to_json returned {type(structured_json)}, expected dict")
-                        structured_json = {
+                        unwrapped_json = {
                             "Personal_Details": {},
                             "Education": {},
                             "Contact_Details": {},
@@ -3546,15 +3550,8 @@ class DocumentUploadView(APIView):
                             "Covid_19_Vaccination": {},
                             "Marine_Courses": {},
                             "Sea_Service_Details": {},
-                            "Specialised_Experience": {},
                             "References": {},
                             "Declaration": {},
-                            "Office_Use_Only": {},
-                            "Physical_Measurements": {},
-                            "Language_Skills": {},
-                            "Medical_History": {},
-                            "Assessments": {},
-                            "Competency_Tests": {},
                             "Applied_Position_Info": {},
                             "error": f"Unexpected return type: {type(structured_json)}"
                         }
@@ -3599,18 +3596,18 @@ class DocumentUploadView(APIView):
 
                     # Step 5: Save structured data into Applicant model
                     # Map from numbered seafarer_application format to Applicant model fields
-                    _pd  = structured_json.get("1_personal_details", {})
-                    _edu = structured_json.get("2_education", {})
-                    _cd  = structured_json.get("3_contact_details", {})
-                    _td  = structured_json.get("4_travel_documents", [])
-                    _pq  = structured_json.get("5_professional_qualification_certificate_of_competency", [])
-                    _nok = structured_json.get("6_next_of_kin_emergency_contact", {})
-                    _hcv = structured_json.get("7_health_certificates_and_vaccinations", {})
-                    _mc  = structured_json.get("8_marine_courses", [])
-                    _ss  = structured_json.get("9_complete_sea_service_details", {})
-                    _ref = structured_json.get("10_references", [])
-                    _dec = structured_json.get("11_declaration", {})
-                    _ofc = structured_json.get("12_for_office_use_only", {})
+                    _pd  = unwrapped_json.get("1_personal_details", {})
+                    _edu = unwrapped_json.get("2_education", {})
+                    _cd  = unwrapped_json.get("3_contact_details", {})
+                    _td  = unwrapped_json.get("4_travel_documents", [])
+                    _pq  = unwrapped_json.get("5_professional_qualification_certificate_of_competency", [])
+                    _nok = unwrapped_json.get("6_next_of_kin_emergency_contact", {})
+                    _hcv = unwrapped_json.get("7_health_certificates_and_vaccinations", {})
+                    _mc  = unwrapped_json.get("8_marine_courses", [])
+                    _ss  = unwrapped_json.get("9_complete_sea_service_details", {})
+                    _ref = unwrapped_json.get("10_references", [])
+                    _dec = unwrapped_json.get("11_declaration", {})
+                    _ofc = unwrapped_json.get("12_for_office_use_only", {})
 
                     # Normalise marital_status: keep dict in seafarer_application,
                     # but convert to string for Applicant model storage
@@ -3838,7 +3835,8 @@ class DocumentUploadView(APIView):
                         },
                         "job_position": None,
                         "job_position_details": None,
-                        "seafarer_application": structured_json,
+                        "seafarer_application": unwrapped_json,
+                        "doubted_fields": doubted_fields,
                         "company_details": None,
                         
                         # Keeping original upload metadata in a separate block just in case
@@ -4303,4 +4301,5 @@ class SaveApplicantView(APIView):
                 'error': 'Failed to save applicant',
                 'details': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
