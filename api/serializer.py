@@ -94,6 +94,11 @@ class SeaServiceSerializer(serializers.ModelSerializer):
         signed_on = data.get('signed_on', self.instance.signed_on if self.instance else None)
         signed_off = data.get('signed_off', self.instance.signed_off if self.instance else None)
         
+        from datetime import date
+        today = date.today()
+        if signed_on and signed_on > today:
+            raise serializers.ValidationError({"signed_on": ["Sign-on date cannot be in the future."]})
+
         # Determine the user instance, because data.get('user') might be empty if derived from request.
         user = data.get('user')
         if not user and self.instance:

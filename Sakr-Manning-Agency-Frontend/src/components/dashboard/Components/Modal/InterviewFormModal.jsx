@@ -24,6 +24,8 @@ const InterviewFormModal = ({
   onClose,
   onSave,
   preSelectedDate = null,
+  preSelectedCandidate = null,
+  preSelectedPosition = null,
   scale = 1,
 }) => {
   // Get data from context
@@ -42,6 +44,7 @@ const InterviewFormModal = ({
         return {
           ...field,
           options: (referenceOptions?.users || []),
+          defaultValue: !interview && preSelectedCandidate ? preSelectedCandidate : field.defaultValue,
         };
       }
 
@@ -58,6 +61,7 @@ const InterviewFormModal = ({
         return {
           ...field,
           options: (referenceOptions?.ranks || []) || [],
+          defaultValue: !interview && preSelectedPosition ? preSelectedPosition : field.defaultValue,
         };
       }
 

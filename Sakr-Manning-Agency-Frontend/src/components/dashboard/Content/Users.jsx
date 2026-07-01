@@ -26,7 +26,9 @@ import ConfirmDialog from "../Components/Common/ConfirmDialog";
 
 import UserFormModal from "../Components/Modal/UserFormModal";
 import UserViewModal from "../Components/Modal/ViewModal/UserViewModal";
+import { CVSubmissionEditModal } from "../Components/Modal/ViewModal/CVSubmissionEditModal";
 import RankManagementModal from "../Components/Modal/RankManagementModal";
+import BulkUpdateModal from "../Components/Modal/BulkUpdateModal";
 import { userService } from "../../../services/Form/userService";
 import { useDashboardData } from "../context/DashboardDataContext";
 import { usersApi } from "../../../services/Dashboard/usersApi";
@@ -65,6 +67,8 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
     createUser,
     updateUser,
     deleteUser,
+    bulkDeleteUsers,
+    bulkUpdateUsers,
     fetchUserStats,
     pagination,
   } = useUsers();
@@ -74,12 +78,14 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
 
   // Local state
   const [selectedIds, setSelectedIds] = useState([]);
+  const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [statistics, setStatistics] = useState(null);
+  const [positions, setPositions] = useState([]);
 
   // Rank management modal
   const [showRankModal, setShowRankModal] = useState(false);
@@ -95,10 +101,31 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
     }
   }, [fetchUserStats]);
 
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} users?`)) {
+      const result = await bulkDeleteUsers(selectedIds);
+      if (result.success) {
+        setSelectedIds([]);
+        loadStatistics();
+      }
+    }
+  };
+
+  const handleBulkUpdate = async (updates) => {
+    const result = await bulkUpdateUsers(selectedIds, updates);
+    if (result.success) {
+      notify.success("Bulk update applied successfully");
+      setShowBulkUpdateModal(false);
+      setSelectedIds([]);
+      loadStatistics();
+    }
+  };
+
   // Load users and stats on mount
   useEffect(() => {
     fetchUsers();
     loadStatistics();
+    usersApi.getPositions().then(data => setPositions(data || [])).catch(console.error);
   }, [fetchUsers, loadStatistics]);
 
   // Handle initial item navigation
@@ -130,11 +157,8 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
       name: user.first_name + " " + user.middle_name,
       email: user.email,
       role: user.role,
-      status:
-        user.user_status === "On Site" || user.user_status === "ON_SITE"
-          ? "Active"
-          : "Inactive",
-      // status: user.user_status,
+      status: user.status || "Active",
+      availability: user.user_status || "ON_SITE",
       avatar: getMediaUrl(user.profile_image) || ASSETS.LOGO,
 
       lastLogin: formatLastLogin(user.last_login),
@@ -449,6 +473,40 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
     notify.success("PDF generated successfully!");
   }, [notify]);
 
+  const handleAvailabilityChange = useCallback(async (row, newAvailability) => {
+    try {
+      await updateUser(row.id, { user_status: newAvailability });
+      notify.success(`Availability updated to ${newAvailability}`);
+      fetchUsers({ ...activeFilters, page: pagination?.currentPage || 1 });
+    } catch (err) {
+      notify.error("Failed to update availability");
+      console.error(err);
+    }
+  }, [updateUser, fetchUsers, activeFilters, pagination, notify]);
+
+  const handleRoleChange = useCallback(async (row, newRole) => {
+    try {
+      await updateUser(row.id, { role: newRole });
+      notify.success(`Role updated to ${newRole}`);
+      fetchUsers({ ...activeFilters, page: pagination?.currentPage || 1 });
+    } catch (err) {
+      notify.error("Failed to update role");
+      console.error(err);
+    }
+  }, [updateUser, fetchUsers, activeFilters, pagination, notify]);
+
+  const handleRankChange = useCallback(async (row, newRank) => {
+    if (!newRank) return;
+    try {
+      await usersApi.assignByPosition(row.id, newRank);
+      notify.success(`Rank updated to ${newRank}`);
+      fetchUsers({ ...activeFilters, page: pagination?.currentPage || 1 });
+    } catch (err) {
+      notify.error("Failed to update rank");
+      console.error(err);
+    }
+  }, [fetchUsers, activeFilters, pagination, notify]);
+
   const handleStatusChange = useCallback(async (row, newStatus) => {
     try {
       const updateData = { status: newStatus };
@@ -530,41 +588,67 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
       activeTab !== "Internal" ? {
         key: "rank",
         title: "Rank",
-        width: 130,
+        width: 140,
         sortable: true,
-        render: (value) => <span style={{fontWeight:500, color:"#475569"}}>{value}</span>,
+        render: (value, row) => (
+          <div style={{ display: 'flex', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+            <div className="relative inline-block w-[130px]">
+              <select
+                value={value === "N/A" ? "" : value}
+                onChange={(e) => handleRankChange(row, e.target.value)}
+                disabled={!canEdit}
+                className="appearance-none w-full border text-xs font-semibold rounded-full py-1.5 pl-4 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-colors bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+              >
+                <option value="">N/A</option>
+                  {positions.map((pos, idx) => {
+                    const val = pos.label || pos.value || pos;
+                    return <option key={idx} value={val}>{val}</option>;
+                  })}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 opacity-60">
+                <ChevronDown size={14} />
+              </div>
+            </div>
+          </div>
+        ),
       } : null,
       {
         key: "role",
         title: "Role",
-        width: 100,
+        width: 140,
         sortable: true,
-        render: (value) => {
+        render: (value, row) => {
           const roleColors = {
             Admin: "#BF4DD1",
             "HR Manager": "#35C2FD",
             Recruiter: "#54D14D",
             Employee: "#FFC107",
-            Craw: "#FFC107",
+            Crew: "#06B6D4",
           };
           return (
-            <span
-              style={{
-                color: roleColors[value] || "#000000",
-              }}
-            >
-              {value === "Employee" ? "Applicant" : value === "Crew" ? "Approved Crew" : value}
-            </span>
+            <div style={{ display: 'flex', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <div className="relative inline-block w-[130px]">
+                <select
+                  value={value === "Applicant" ? "Employee" : value === "Approved Crew" ? "Crew" : value}
+                  onChange={(e) => handleRoleChange(row, e.target.value)}
+                  disabled={!canEdit}
+                  className="appearance-none w-full border text-xs font-semibold rounded-full py-1.5 pl-4 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-colors bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-700"
+                  style={{ color: roleColors[value] || roleColors[value === "Applicant" ? "Employee" : "Crew"] || "#475569" }}
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="HR Manager">HR Manager</option>
+                  <option value="Recruiter">Recruiter</option>
+                  <option value="Employee">Applicant</option>
+                  <option value="Crew">Crew</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 opacity-60">
+                  <ChevronDown size={14} />
+                </div>
+              </div>
+            </div>
           );
         },
       },
-      // {
-      //   key: "lastLogin",
-      //   title: "Last Login",
-      //   width: 100,
-      //   sortable: true,
-      //   render: (value) => value,
-      // },
       {
         key: "status",
         title: "Status",
@@ -588,6 +672,39 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
                 >
                   <option value="Active" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Active</option>
                   <option value="Inactive" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Inactive</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 opacity-60">
+                  <ChevronDown size={14} />
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "availability",
+        title: "Availability",
+        width: 160,
+        sortable: true,
+        headerAlign: "center",
+        render: (value, row) => {
+          const isVacation = value === "VACATION" || value === "MEDICAL VACATION";
+          const statusClass = isVacation 
+              ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50" 
+              : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50";
+          
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <div className="relative inline-block w-[150px]">
+                <select
+                  value={value}
+                  onChange={(e) => handleAvailabilityChange(row, e.target.value)}
+                  disabled={!canEdit}
+                  className={`appearance-none w-full border text-xs font-semibold rounded-full py-1.5 pl-4 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-colors ${statusClass}`}
+                >
+                  <option value="ON_SITE" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">On Site</option>
+                  <option value="VACATION" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Vacation</option>
+                  <option value="MEDICAL VACATION" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Medical Vacation</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 opacity-60">
                   <ChevronDown size={14} />
@@ -637,7 +754,7 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
             </button>
             {canDelete && (
               <button
-                onClick={() => handleDeleteUser(row)}
+                onClick={() => handleDeleteUser(row.id)}
                 className="p-1.5 text-rose-500 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
                 title="Delete User"
               >
@@ -648,7 +765,7 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
         ),
       },
     ].filter(Boolean),
-    [canEdit, canDelete, handleDeleteUser, handleEditUser, handleManageRanks, handleDownloadPdfRow, activeTab]
+    [canEdit, canDelete, handleDeleteUser, handleEditUser, handleManageRanks, handleDownloadPdfRow, activeTab, positions, handleRankChange, handleRoleChange, handleAvailabilityChange]
   );
 
   // Helper function to extract unique values from deep objects safely (preventing circular reference crashes)
@@ -1061,21 +1178,28 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
           isSidebarOpen={isSidebarOpen}
           onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {selectedIds.length > 0 && canDelete && (
+          {selectedIds.length > 0 && (canDelete || canEdit) && (
             <div className="mb-4">
               <BulkActionBar
                 selectedCount={selectedIds.length}
                 onClearSelection={() => setSelectedIds([])}
                 actions={[
-                  {
-                    icon: <Trash2 size={16} />,
-                    label: "Delete Selected",
-                    onClick: () => {
-                      // We don't have a bulk delete implemented yet, but we can set the UI
-                      notify.info("Bulk delete not fully implemented yet");
-                    },
-                    variant: "danger"
-                  }
+                  ...(canEdit ? [
+                    {
+                      icon: <Edit2 size={16} />,
+                      label: "Bulk Edit",
+                      onClick: () => setShowBulkUpdateModal(true),
+                      variant: "primary"
+                    }
+                  ] : []),
+                  ...(canDelete ? [
+                    {
+                      icon: <Trash2 size={16} />,
+                      label: "Delete Selected",
+                      onClick: handleBulkDelete,
+                      variant: "danger"
+                    }
+                  ] : [])
                 ]}
               />
             </div>
@@ -1101,13 +1225,27 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
           />
         </div>
 
-        <UserViewModal
-          isOpen={showViewModal}
-          onClose={() => setShowViewModal(false)}
-          user={viewingUser}
-          scale={scale}
-          canDelete={canDelete}
-        />
+        {viewingUser?.role === "Employee" || viewingUser?.role === "Crew" ? (
+          <CVSubmissionEditModal
+            isOpen={showViewModal}
+            onClose={() => setShowViewModal(false)}
+            submission={{
+              id: viewingUser.id,
+              generated_id: viewingUser.assigned_code,
+              user: viewingUser,
+              user_name: viewingUser.name || viewingUser.first_name + " " + viewingUser.last_name,
+              profile_image: viewingUser.profile_image
+            }}
+          />
+        ) : (
+          <UserViewModal
+            isOpen={showViewModal}
+            onClose={() => setShowViewModal(false)}
+            user={viewingUser}
+            scale={scale}
+            canDelete={canDelete}
+          />
+        )}
       </section>
 
       {showUserModal && (
@@ -1116,6 +1254,15 @@ export function UserManagement({ scale = 1, isMobile, initialItemData }) {
           onClose={() => setShowUserModal(false)}
           onSave={handleSaveUser}
           scale={scale}
+        />
+      )}
+
+      {showBulkUpdateModal && (
+        <BulkUpdateModal
+          isOpen={showBulkUpdateModal}
+          selectedCount={selectedIds.length}
+          onClose={() => setShowBulkUpdateModal(false)}
+          onApply={handleBulkUpdate}
         />
       )}
 

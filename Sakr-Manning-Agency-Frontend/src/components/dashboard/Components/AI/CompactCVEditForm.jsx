@@ -1,58 +1,75 @@
 import React, { useState, useEffect } from "react";
 
-const InputField = ({ label, value, onChange, type = "text", scale, t }) => (
-  <div style={{ marginBottom: `${Math.round(12 * scale)}px`, width: "100%" }}>
-    <label
-      style={{
-        display: "block",
-        fontSize: `${Math.round(12 * scale)}px`,
-        color: t?.textMuted || "#64748B",
-        marginBottom: `${Math.round(4 * scale)}px`,
-        fontWeight: 500,
-        textTransform: "capitalize",
-      }}
-    >
-      {label.replace(/_/g, " ")}
-    </label>
-    {type === "textarea" ? (
-      <textarea
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: "100%",
-          padding: `${Math.round(8 * scale)}px ${Math.round(12 * scale)}px`,
-          borderRadius: `${Math.round(8 * scale)}px`,
-          border: `1px solid ${t?.cardBorder || "#E2E8F0"}`,
-          backgroundColor: t?.isDarkMode ? "rgba(255,255,255,0.05)" : "#F8FAFC",
-          color: t?.text || "#1E293B",
-          fontSize: `${Math.round(14 * scale)}px`,
-          outline: "none",
-          minHeight: `${Math.round(60 * scale)}px`,
-          resize: "vertical",
-          fontFamily: "inherit"
-        }}
-      />
-    ) : (
-      <input
-        type={type}
-        value={value || ""}
-        onChange={(e) => onChange(type === "checkbox" ? e.target.checked : e.target.value)}
-        style={{
-          width: "100%",
-          padding: `${Math.round(8 * scale)}px ${Math.round(12 * scale)}px`,
-          borderRadius: `${Math.round(8 * scale)}px`,
-          border: `1px solid ${t?.cardBorder || "#E2E8F0"}`,
-          backgroundColor: t?.isDarkMode ? "rgba(255,255,255,0.05)" : "#F8FAFC",
-          color: t?.text || "#1E293B",
-          fontSize: `${Math.round(14 * scale)}px`,
-          outline: "none"
-        }}
-      />
-    )}
-  </div>
-);
+const InputField = ({ label, value, onChange, type = "text", scale, t, doubtedFields = [] }) => {
+  const isDoubted = doubtedFields.includes(label) || doubtedFields.includes(label.toLowerCase()); // (value === "" || value === null || value === undefined) && type !== "checkbox";
+  const borderColor = isDoubted ? "#f59e0b" : (t?.cardBorder || "#E2E8F0");
+  const bgColor = isDoubted 
+    ? (t?.isDarkMode ? "rgba(245, 158, 11, 0.1)" : "#fffbeb") 
+    : (t?.isDarkMode ? "rgba(255,255,255,0.05)" : "#F8FAFC");
 
-const JsonNodeEditor = ({ nodeKey, data, onChange, scale, t, depth = 0 }) => {
+  return (
+    <div style={{ marginBottom: `${Math.round(12 * scale)}px`, width: "100%" }}>
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          fontSize: `${Math.round(12 * scale)}px`,
+          color: t?.textMuted || "#64748B",
+          marginBottom: `${Math.round(4 * scale)}px`,
+          fontWeight: 500,
+          textTransform: "capitalize",
+        }}
+      >
+        {label.replace(/_/g, " ")}
+        {isDoubted && (
+          <span style={{ color: "#f59e0b", marginLeft: "8px", fontSize: `${Math.round(10 * scale)}px`, fontWeight: 600 }}>
+            ⚠️ Review
+          </span>
+        )}
+      </label>
+      {type === "textarea" ? (
+        <textarea
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            width: "100%",
+            padding: `${Math.round(8 * scale)}px ${Math.round(12 * scale)}px`,
+            borderRadius: `${Math.round(8 * scale)}px`,
+            border: `1px solid ${borderColor}`,
+            backgroundColor: bgColor,
+            color: t?.text || "#1E293B",
+            fontSize: `${Math.round(14 * scale)}px`,
+            outline: "none",
+            minHeight: `${Math.round(60 * scale)}px`,
+            resize: "vertical",
+            fontFamily: "inherit",
+            boxSizing: "border-box"
+          }}
+        />
+      ) : (
+        <input
+          type={type}
+          checked={type === "checkbox" ? !!value : undefined}
+          value={type !== "checkbox" ? (value || "") : undefined}
+          onChange={(e) => onChange(type === "checkbox" ? e.target.checked : e.target.value)}
+          style={{
+            width: type === "checkbox" ? "auto" : "100%",
+            padding: `${Math.round(8 * scale)}px ${Math.round(12 * scale)}px`,
+            borderRadius: `${Math.round(8 * scale)}px`,
+            border: `1px solid ${borderColor}`,
+            backgroundColor: bgColor,
+            color: t?.text || "#1E293B",
+            fontSize: `${Math.round(14 * scale)}px`,
+            outline: "none",
+            boxSizing: "border-box"
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const JsonNodeEditor = ({ nodeKey, data, onChange, scale, t, depth = 0, doubtedFields = [] }) => {
   const isObject = typeof data === "object" && data !== null && !Array.isArray(data);
   const isArray = Array.isArray(data);
 
@@ -119,6 +136,7 @@ const JsonNodeEditor = ({ nodeKey, data, onChange, scale, t, depth = 0 }) => {
               scale={scale}
               t={t}
               depth={depth + 1}
+              doubtedFields={doubtedFields}
             />
           </div>
         ))}
@@ -180,18 +198,21 @@ const JsonNodeEditor = ({ nodeKey, data, onChange, scale, t, depth = 0 }) => {
             width: "100%"
           }}
         >
-          {Object.keys(data).map((key) => {
-            const childData = data[key];
-            const childIsObj = typeof childData === "object" && childData !== null;
-            return (
-              <div key={key} style={{ gridColumn: childIsObj ? "1 / -1" : "auto" }}>
-                <JsonNodeEditor
-                  nodeKey={key}
-                  data={childData}
-                  onChange={(newVal) => onChange({ ...data, [key]: newVal })}
+          {Object.keys(data)
+            .filter((key) => key !== "extracted_photo_base64" && key !== "doubtful_checkboxes")
+            .map((key) => {
+              const childData = data[key];
+              const childIsObj = typeof childData === "object" && childData !== null;
+              return (
+                <div key={key} style={{ gridColumn: childIsObj ? "1 / -1" : "auto" }}>
+                  <JsonNodeEditor
+                    nodeKey={key}
+                    data={childData}
+                    onChange={(newVal) => onChange({ ...data, [key]: newVal })}
                   scale={scale}
                   t={t}
                   depth={depth + 1}
+                  doubtedFields={doubtedFields}
                 />
               </div>
             );
@@ -210,6 +231,7 @@ const JsonNodeEditor = ({ nodeKey, data, onChange, scale, t, depth = 0 }) => {
       type={typeof data === "boolean" ? "checkbox" : typeof data === "number" ? "number" : String(data).length > 50 ? "textarea" : "text"}
       scale={scale}
       t={t}
+      doubtedFields={doubtedFields}
     />
   );
 };
@@ -220,7 +242,7 @@ export default function CompactCVEditForm({ data, onChange, scale = 1, isDarkMod
     text: isDarkMode ? "#F1F5F9" : "#1E293B",
     textMuted: isDarkMode ? "#94A3B8" : "#64748B",
     cardBorder: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#E2E8F0",
-    accentColor: "#00f2fe",
+    accentColor: isDarkMode ? "#3b82f6" : "#0f172a", // Dark navy blue for light mode, vibrant blue for dark mode
     bg: isDarkMode ? "#0B0F19" : "#F8FAFC",
     inputBg: isDarkMode ? "rgba(15, 23, 42, 0.6)" : "#ffffff"
   };
@@ -245,6 +267,7 @@ export default function CompactCVEditForm({ data, onChange, scale = 1, isDarkMod
         onChange={onChange}
         scale={scale}
         t={t}
+        doubtedFields={data?.doubtful_checkboxes || []}
       />
     </div>
   );

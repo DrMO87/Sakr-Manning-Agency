@@ -164,8 +164,16 @@ const ChatWidget = ({
     setIsTyping(true);
     setError(null);
 
+    let currentKeys = null;
     try {
-      const response = await aiApi.sendChatMessage(userMessage.content, currentSession, groqApiKey);
+        const keysStr = localStorage.getItem("aiApiKeys");
+        if (keysStr) {
+            currentKeys = JSON.parse(keysStr);
+        }
+    } catch (e) {}
+
+    try {
+      const response = await aiApi.sendChatMessage(userMessage.content, currentSession, currentKeys || groqApiKey);
 
       if (response.success) {
         setCurrentSession(response.data.session_id);
@@ -175,6 +183,11 @@ const ChatWidget = ({
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+        
+        if (response.data.api_keys_status) {
+            localStorage.setItem("aiApiKeys", JSON.stringify(response.data.api_keys_status));
+            window.dispatchEvent(new Event("storage"));
+        }
       } else {
         setError(response.error || "Failed to send message");
       }
@@ -400,13 +413,13 @@ const ChatWidget = ({
 
           <div style={{ display: "flex", gap: `${Math.round(8 * scale)}px` }}>
             <button
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={handleClearChat}
               className="header-btn"
-              title="Settings"
+              title="Clear Chat"
               style={{
-                background: showSettings ? (isDarkMode ? "rgba(0,242,254,0.15)" : "rgba(255,255,255,0.3)") : "transparent",
+                background: "transparent",
                 border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)"}`,
-                color: isDarkMode ? "#00f2fe" : "#ffffff",
+                color: isDarkMode ? t.textMuted : "#ffffff",
                 borderRadius: `${Math.round(8 * scale)}px`,
                 width: `${Math.round(34 * scale)}px`,
                 height: `${Math.round(34 * scale)}px`,
@@ -416,25 +429,15 @@ const ChatWidget = ({
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
-            >
-              <Settings size={Math.round(16 * scale)} strokeWidth={2} />
-            </button>
-            <button
-              onClick={handleClearChat}
-              className="header-btn"
-              title="Clear Chat"
-              style={{
-                background: "transparent",
-                border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)"}`,
-                color: isDarkMode ? "#94a3b8" : "rgba(255,255,255,0.8)",
-                borderRadius: `${Math.round(8 * scale)}px`,
-                width: `${Math.round(34 * scale)}px`,
-                height: `${Math.round(34 * scale)}px`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "all 0.2s",
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = isDarkMode ? "rgba(220, 38, 38, 0.15)" : "rgba(220, 38, 38, 0.8)";
+                e.currentTarget.style.color = isDarkMode ? "#f87171" : "#ffffff";
+                e.currentTarget.style.borderColor = "transparent";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = isDarkMode ? t.textMuted : "#ffffff";
+                e.currentTarget.style.border = `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)"}`;
               }}
             >
               <Trash2 size={Math.round(16 * scale)} strokeWidth={2} />
@@ -447,7 +450,7 @@ const ChatWidget = ({
                 style={{
                   background: "transparent",
                   border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)"}`,
-                  color: isDarkMode ? "#94a3b8" : "rgba(255,255,255,0.8)",
+                  color: isDarkMode ? "#94a3b8" : "#ffffff",
                   borderRadius: `${Math.round(8 * scale)}px`,
                   width: `${Math.round(34 * scale)}px`,
                   height: `${Math.round(34 * scale)}px`,
@@ -457,60 +460,20 @@ const ChatWidget = ({
                   cursor: "pointer",
                   transition: "all 0.2s",
                 }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.3)";
+                  e.currentTarget.style.color = isDarkMode ? "#fff" : "#ffffff";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = isDarkMode ? "#94a3b8" : "#ffffff";
+                }}
               >
                 <Minimize2 size={Math.round(16 * scale)} strokeWidth={2} />
               </button>
             )}
           </div>
         </div>
-
-        {/* Settings Dropdown */}
-        {showSettings && (
-          <div
-            style={{
-              padding: `${Math.round(16 * scale)}px`,
-              background: isDarkMode ? "rgba(15, 23, 42, 0.95)" : "#F3F4F6",
-              borderBottom: `1px solid ${t.panelBorder}`,
-            }}
-          >
-            <label
-              style={{
-                display: "block",
-                fontSize: `${Math.round(12 * scale)}px`,
-                color: isDarkMode ? "#94a3b8" : "#4B5563",
-                marginBottom: `${Math.round(8 * scale)}px`,
-                fontWeight: 600,
-              }}
-            >
-              Groq API Key (LLaMA 3)
-            </label>
-            <input
-              type="password"
-              value={groqApiKey}
-              onChange={(e) => setGroqApiKey(e.target.value)}
-              placeholder="gsk_..."
-              style={{
-                width: "100%",
-                background: t.inputBg,
-                border: `1px solid ${t.inputBorder}`,
-                color: t.inputText,
-                padding: `${Math.round(10 * scale)}px`,
-                borderRadius: `${Math.round(8 * scale)}px`,
-                outline: "none",
-                fontSize: `${Math.round(13 * scale)}px`,
-              }}
-            />
-            <p
-              style={{
-                margin: `${Math.round(8 * scale)}px 0 0 0`,
-                fontSize: `${Math.round(11 * scale)}px`,
-                color: isDarkMode ? "#64748b" : "#6B7280",
-              }}
-            >
-              Enter your Groq API key to use the LLaMA 3 model instead of the default backend model. Stored locally in your browser.
-            </p>
-          </div>
-        )}
 
         {/* Messages Area */}
         <div

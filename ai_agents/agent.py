@@ -22,13 +22,18 @@ import os
 
 # Default Gemini configuration
 def get_model(groq_api_key=None):
+    if not groq_api_key:
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        
     if groq_api_key:
         try:
             from langchain_groq import ChatGroq
             return ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=groq_api_key)
         except ImportError:
             pass
-    return ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", google_api_key=os.environ.get("GOOGLE_API_KEY", "missing_key_please_add_to_env"))
+            
+    google_api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "missing_key_please_add_to_env")
+    return ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", google_api_key=google_api_key)
 
 # System prompt for the chat agent
 SYSTEM_PROMPT = """You are a conversational AI Search Agent designed to help users find information through natural dialogue.
@@ -101,9 +106,17 @@ def extract_conversation_context(messages, limit=5):
     
     return "\n".join(context_parts)
 
-def get_agent_response(query, conversation_history=None, session_id=None, groq_api_key=None):
+def get_agent_response(query, conversation_history=None, session_id=None, api_keys_config=None, groq_api_key=None):
     """Get response from the agent with conversation context"""
     try:
+        # Determine which key to use
+        # If api_keys_config has groq keys, extract one (simplified for chat)
+        if api_keys_config and isinstance(api_keys_config, dict) and api_keys_config.get("groq"):
+            for k in api_keys_config.get("groq", []):
+                if k.get("status") == "live" and k.get("key"):
+                    groq_api_key = k["key"]
+                    break
+
         # Create dynamic agent
         model = get_model(groq_api_key)
         agent = create_react_agent(model, tools)
@@ -128,15 +141,33 @@ def get_agent_response(query, conversation_history=None, session_id=None, groq_a
         # Get response from agent
         response = agent.invoke({"messages": messages})
         
+        # Extract token usage and update api_keys_config
+        if api_keys_config and isinstance(api_keys_config, dict):
+            try:
+                total_tokens = 0
+                for msg in response.get("messages", []):
+                    if hasattr(msg, 'response_metadata') and msg.response_metadata:
+                        usage = msg.response_metadata.get("token_usage", {})
+                        if isinstance(usage, dict):
+                            total_tokens += usage.get("total_tokens", 0)
+                        elif hasattr(usage, 'total_tokens'):
+                            total_tokens += usage.total_tokens
+                if total_tokens > 0:
+                    provider = "groq" if groq_api_key else "gemini"
+                    token_key = f"{provider}_tokens"
+                    api_keys_config[token_key] = api_keys_config.get(token_key, 0) + total_tokens
+            except Exception as e:
+                print(f"Token tracking error: {e}")
+
         # Extract the final message content
         if response and "messages" in response:
             final_message = response["messages"][-1]
             if hasattr(final_message, 'content'):
-                return final_message.content
+                return final_message.content, api_keys_config
             else:
-                return str(final_message)
+                return str(final_message), api_keys_config
         
-        return "I apologize, but I couldn't generate a proper response. Please try again."
+        return "I apologize, but I couldn't generate a proper response. Please try again.", api_keys_config
         
     except Exception as e:
-        return f"I encountered an error while processing your request: {str(e)}"
+        return f"I encountered an error while processing your request: {str(e)}", api_keys_config

@@ -9,7 +9,7 @@ export const handleApiError = (error) => {
   // Network errors (no response from server)
   if (!error.response) {
     if (error.request) {
-      return "Network error. Please check your internet connection.";
+      return "Network error. Please check your internet connection or verify the backend server is running.";
     }
     return error.message || "An unexpected error occurred.";
   }

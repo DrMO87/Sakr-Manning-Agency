@@ -1,15 +1,141 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ChatWidget from "../Components/AI/ChatWidget";
 import aiApi from "../../../services/Dashboard/aiApi";
 import { ASSETS } from "../../../utils/constants";
 import AnimatedRobotIcon from "../Components/AI/AnimatedRobotIcon";
 import CompactCVEditForm from "../Components/AI/CompactCVEditForm";
+import BulkImport from "../Components/AI/BulkImport";
+import ApiKeysManager from "../Components/AI/ApiKeysManager";
+import { Settings } from "lucide-react";
 
 const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
   const [activeTab, setActiveTab] = useState("chat");
+
+  const [apiKeysStatus, setApiKeysStatus] = useState(null);
+  const [showApiKeysManager, setShowApiKeysManager] = useState(false);
+
+  useEffect(() => {
+    const updateStatus = () => {
+      try {
+        const str = localStorage.getItem("aiApiKeys");
+        if (str) {
+            setApiKeysStatus(JSON.parse(str));
+        }
+      } catch(e){}
+    };
+    updateStatus();
+    window.addEventListener("storage", updateStatus);
+    const interval = setInterval(updateStatus, 1000);
+    return () => {
+        window.removeEventListener("storage", updateStatus);
+        clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchQuota = async () => {
+        const keysStr = localStorage.getItem("aiApiKeys");
+        if (keysStr) {
+            try {
+                const keys = JSON.parse(keysStr);
+                if (keys.groq && keys.groq.length > 0) {
+                    const res = await aiApi.checkQuota(keys);
+                    if (res.success && res.data?.limit && res.data?.limit !== "Unknown") {
+                        keys.actual_groq_limit = res.data.limit;
+                        keys.actual_groq_remaining = res.data.remaining;
+                        
+                        // If we have remaining quota, mark exhausted keys as live
+                        if (parseInt(res.data.remaining) > 0 && keys.groq) {
+                            keys.groq.forEach(k => {
+                                if (k.status === "exhausted") {
+                                    k.status = "live";
+                                    k.reset_time = null;
+                                }
+                            });
+                        }
+                        localStorage.setItem("aiApiKeys", JSON.stringify(keys));
+                    }
+                }
+            } catch (e) {}
+        }
+    };
+    fetchQuota();
+  }, []);
+
+  const formatWaitTime = (seconds) => {
+      if (seconds <= 0) return "0m";
+      const m = Math.ceil(seconds / 60);
+      if (m > 60) {
+          const h = Math.floor(m / 60);
+          const mins = m % 60;
+          return `${h}h ${mins}m`;
+      }
+      return `${m}m`;
+  };
+
+  const getGlobalApiStatus = () => {
+      if (!apiKeysStatus) return { type: "none" };
+      let hasLive = false;
+      let shortestReset = Infinity;
+      let lastActive = null;
+      
+      const groqKeys = apiKeysStatus.groq || [];
+      for (const k of groqKeys) {
+          if (!k.key) continue;
+          if (k.status === "live") {
+              if (!k.reset_time || Date.now()/1000 > k.reset_time) {
+                  hasLive = true;
+                  lastActive = { model: "groq", key: "..." + k.key.slice(-4) };
+                  break;
+              } else {
+                  if (k.reset_time < shortestReset) shortestReset = k.reset_time;
+              }
+          } else if (k.status === "exhausted") {
+              if (k.reset_time && Date.now()/1000 > k.reset_time) {
+                  hasLive = true;
+                  lastActive = { model: "groq", key: "..." + k.key.slice(-4) };
+                  break;
+              } else if (k.reset_time < shortestReset) {
+                  shortestReset = k.reset_time;
+              }
+          }
+      }
+      
+      if (hasLive) return { 
+          type: "live", 
+          lastActive, 
+          tokens: apiKeysStatus.groq_tokens || 0,
+          limit: apiKeysStatus.actual_groq_limit,
+          remaining: apiKeysStatus.actual_groq_remaining
+      };
+      
+      if (apiKeysStatus.gemini && !apiKeysStatus.gemini_exhausted) {
+          return { type: "live", lastActive: { model: "gemini", key: "..." + apiKeysStatus.gemini.slice(-4) }, tokens: apiKeysStatus.gemini_tokens || 0 }; 
+      }
+      
+      if (shortestReset !== Infinity) {
+          const waitTimeStr = formatWaitTime(shortestReset - Date.now()/1000);
+          if (waitTimeStr === "0m") return { type: "live" }; 
+          return { type: "waiting", time: waitTimeStr };
+      }
+      
+      return { type: "none" };
+  };
+  
+  const apiStatus = getGlobalApiStatus();
+
+  const refreshKeysStatus = () => {
+      try {
+          const str = localStorage.getItem("aiApiKeys");
+          if (str) setApiKeysStatus(JSON.parse(str));
+      } catch(e){}
+  };
+
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [uploadTokenUsage, setUploadTokenUsage] = useState(null);
   const [uploadResult, setUploadResult] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
@@ -137,18 +263,76 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
   };
 
   const handleUpload = async () => {
-    if (!uploadFile) return;
-
-    setUploading(true);
-    const groqApiKey = localStorage.getItem("groq_api_key");
-    const result = await aiApi.uploadDocument(uploadFile, groqApiKey);
-
-    if (result.success) {
-      setUploadResult(result.data);
-      setExtractedData(result.data.extracted_data || {});
+    if (!uploadFile) {
+      alert("Please select a file to upload.");
+      return;
     }
 
-    setUploading(false);
+    let currentKeys = null;
+    try {
+        const keysStr = localStorage.getItem("aiApiKeys");
+        if (keysStr) {
+            currentKeys = JSON.parse(keysStr);
+        }
+    } catch (e) {
+        console.error("Failed to parse aiApiKeys from localStorage", e);
+    }
+
+    setUploading(true);
+    setUploadResult(null);
+    setElapsedTime(0);
+    setUploadTokenUsage(null);
+    
+    const timerStart = Date.now();
+    const timerInterval = setInterval(() => {
+      setElapsedTime(((Date.now() - timerStart) / 1000).toFixed(1));
+    }, 100);
+    
+    try {
+      const result = await aiApi.uploadDocument(uploadFile, currentKeys);
+      clearInterval(timerInterval);
+      setElapsedTime(((Date.now() - timerStart) / 1000).toFixed(1));
+      
+      if (result.success && result.data?.api_keys_status) {
+        localStorage.setItem("aiApiKeys", JSON.stringify(result.data.api_keys_status));
+        setTimeout(async () => {
+            try {
+                const res = await aiApi.checkQuota(result.data.api_keys_status);
+                if (res.success && res.data?.limit && res.data?.limit !== "Unknown") {
+                    const currentKeysStr = localStorage.getItem("aiApiKeys");
+                    const currentKeys = currentKeysStr ? JSON.parse(currentKeysStr) : result.data.api_keys_status;
+                    currentKeys.actual_groq_limit = res.data.limit;
+                    currentKeys.actual_groq_remaining = res.data.remaining;
+                    localStorage.setItem("aiApiKeys", JSON.stringify(currentKeys));
+                }
+            } catch (e) {}
+        }, 100);
+      } else if (!result.success) {
+        const errData = result.rawError?.response?.data;
+        if (errData?.api_keys_status) {
+          localStorage.setItem("aiApiKeys", JSON.stringify(errData.api_keys_status));
+        }
+      }
+
+      if (result.success) {
+        setUploadResult(result.data);
+        setExtractedData(result.data.extracted_data || {});
+        if (result.data.api_keys_status?.token_usage) {
+            setUploadTokenUsage(result.data.api_keys_status.token_usage);
+        }
+      } else {
+        const backendMessage = result.rawError?.response?.data?.message || result.rawError?.response?.data?.error;
+        const errorMessage = backendMessage || (typeof result.error === 'string' ? result.error : (result.error?.message || "Unknown error occurred"));
+        alert(`Upload failed: ${errorMessage}`);
+      }
+    } catch (e) {
+      clearInterval(timerInterval);
+      setElapsedTime(((Date.now() - timerStart) / 1000).toFixed(1));
+      console.error(e);
+      alert(`Upload failed: ${e.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -189,6 +373,10 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
         overflow: activeTab === "chat" ? "hidden" : "auto",
       }}
     >
+            {/* Api Keys Manager Modal */}
+      {showApiKeysManager && (
+        <ApiKeysManager onClose={() => setShowApiKeysManager(false)} scale={scale} isDarkMode={isDarkMode} t={t} />
+      )}
       {/* Compact Header & Tabs Bar */}
       <div
         style={{
@@ -232,6 +420,85 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
               Nexus Core Data Link
             </p>
           </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: `${Math.round(4 * scale)}px`, marginLeft: `${Math.round(4 * scale)}px` }}>
+            <button
+              onClick={() => setShowApiKeysManager(true)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: t.textMuted,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: `${Math.round(8 * scale)}px`,
+                borderRadius: `${Math.round(8 * scale)}px`,
+                transition: "all 0.2s ease"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.color = t.accentColor;
+                e.currentTarget.style.background = t.tabHoverBg || "rgba(0,0,0,0.05)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.color = t.textMuted;
+                e.currentTarget.style.background = "transparent";
+              }}
+              title="API Keys Settings"
+            >
+              <Settings size={Math.round(20 * scale)} />
+            </button>
+            
+            {apiStatus.type === "live" && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {apiStatus.lastActive && (
+                      <div style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "6px", 
+                          background: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", 
+                          padding: "4px 8px", 
+                          borderRadius: "12px", 
+                          fontSize: "12px", 
+                          color: t.textDim 
+                      }}>
+                        <span style={{ fontWeight: 600, color: t.text }}>{apiStatus.lastActive.model}</span>
+                        <span>{apiStatus.lastActive.key}</span>
+                        {(apiStatus.limit && apiStatus.remaining) ? (
+                            <span style={{ color: t.accentColor || "#00f2fe", fontWeight: 600 }}>
+                                Quota: {Number(apiStatus.remaining).toLocaleString()} / {Number(apiStatus.limit).toLocaleString()} tkns
+                            </span>
+                        ) : (
+                            apiStatus.tokens !== undefined && <span style={{ color: t.accentColor || "#00f2fe", fontWeight: 600 }}>{(apiStatus.tokens || 0).toLocaleString()} tkns</span>
+                        )}
+                      </div>
+                    )}
+                    <div style={{ 
+                        width: `${Math.round(8 * scale)}px`, 
+                        height: `${Math.round(8 * scale)}px`, 
+                        borderRadius: "50%", 
+                        background: "#22c55e",
+                        boxShadow: "0 0 8px rgba(34, 197, 94, 0.6)"
+                    }} title="API Keys are Live" />
+                </div>
+            )}
+            {apiStatus.type === "waiting" && (
+                <div style={{ 
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    background: "rgba(239, 68, 68, 0.1)",
+                    color: "#ef4444",
+                    padding: `${Math.round(4 * scale)}px ${Math.round(8 * scale)}px`,
+                    borderRadius: `${Math.round(12 * scale)}px`,
+                    fontSize: `${Math.round(11 * scale)}px`,
+                    fontWeight: 600,
+                    border: "1px solid rgba(239, 68, 68, 0.2)"
+                }} title="All keys exhausted">
+                    {apiStatus.time}
+                </div>
+            )}
+          </div>
         </div>
 
         {/* Tabs inside header */}
@@ -248,6 +515,7 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
           {[
             { id: "chat", label: "AI Chat", icon: "💬" },
             { id: "upload", label: "Upload Document", icon: "📄" },
+            { id: "bulk", label: "Bulk Import", icon: "📂" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -301,7 +569,7 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
           >
             <ChatWidget scale={scale} isFloating={false} isDarkMode={isDarkMode} />
           </div>
-        ) : (
+        ) : activeTab === "upload" ? (
           <div
             style={{
               background: t.cardBg,
@@ -401,7 +669,7 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
                         boxShadow: uploading ? "none" : t.btnShadow,
                       }}
                     >
-                      {uploading ? "Processing..." : "Upload & Process"}
+                      {uploading ? `Processing... (${elapsedTime}s)` : "Upload & Process"}
                     </button>
                   </div>
                 </div>
@@ -461,10 +729,11 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
               )}
             </div>
 
-            {/* Upload Success & Review */}
+                        {/* Upload Success & Review */}
             {uploadResult && (
               <div
                 style={{
+                  position: "relative",
                   background: t.cardBg,
                   border: `1px solid ${t.cardBorder}`,
                   borderRadius: `${Math.round(16 * scale)}px`,
@@ -473,7 +742,53 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
                   animation: "fadeInDown 0.4s ease",
                 }}
               >
-                <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                {extractedData?.extracted_photo_base64 && (
+                  <div style={{ position: "absolute", top: `${Math.round(24 * scale)}px`, right: `${Math.round(24 * scale)}px`, textAlign: "center", animation: "fadeIn 0.6s ease", zIndex: 10 }}>
+                    <div style={{ marginBottom: `${Math.round(6 * scale)}px`, fontSize: `${Math.round(12 * scale)}px`, color: t.textDim, fontWeight: 500 }}>
+                      Profile Photo
+                    </div>
+                    <img
+                      src={`data:image/jpeg;base64,${extractedData.extracted_photo_base64}`}
+                      alt="Extracted Profile"
+                      style={{
+                        width: `${Math.round(110 * scale)}px`,
+                        height: `${Math.round(110 * scale)}px`,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: `3px solid ${t.accentBg}`,
+                        boxShadow: t.accentShadow,
+                        display: "block",
+                        margin: "0 auto"
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const newData = { ...extractedData };
+                        delete newData.extracted_photo_base64;
+                        setExtractedData(newData);
+                      }}
+                      style={{
+                        marginTop: `${Math.round(8 * scale)}px`,
+                        padding: `${Math.round(4 * scale)}px ${Math.round(12 * scale)}px`,
+                        backgroundColor: "#ef4444",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: `${Math.round(4 * scale)}px`,
+                        cursor: "pointer",
+                        fontSize: `${Math.round(11 * scale)}px`,
+                        fontWeight: 600,
+                        transition: "background-color 0.2s",
+                        outline: "none"
+                      }}
+                      onMouseOver={(e) => e.target.style.backgroundColor = "#dc2626"}
+                      onMouseOut={(e) => e.target.style.backgroundColor = "#ef4444"}
+                    >
+                      Remove Photo
+                    </button>
+                  </div>
+                )}
+                
+                <div style={{ textAlign: "center", marginBottom: "20px", paddingRight: extractedData?.extracted_photo_base64 ? `${Math.round(140 * scale)}px` : "0" }}>
                   <h3
                     style={{
                       fontSize: `${Math.round(20 * scale)}px`,
@@ -484,6 +799,26 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
                   >
                     Extraction Successful. Please Review:
                   </h3>
+
+                  {uploadTokenUsage && (
+                    <div style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        background: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,101,175,0.05)",
+                        padding: "6px 16px",
+                        borderRadius: "20px",
+                        marginBottom: "16px",
+                        border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,101,175,0.1)"}`
+                    }}>
+                        <span style={{ fontSize: `${Math.round(13 * scale)}px`, color: t.textDim, fontWeight: 600 }}>
+                            <span style={{ color: t.accentColor }}>⚡ {uploadTokenUsage.total.toLocaleString()}</span> tokens used
+                        </span>
+                        <span style={{ fontSize: `${Math.round(11 * scale)}px`, color: t.textMuted }}>
+                            ({uploadTokenUsage.prompt.toLocaleString()} prompt + {uploadTokenUsage.completion.toLocaleString()} completion)
+                        </span>
+                    </div>
+                  )}
                   <p
                     style={{
                       fontSize: `${Math.round(14 * scale)}px`,
@@ -599,7 +934,11 @@ const AIApplication = ({ scale = 1, isMobile = false, isDarkMode = false }) => {
               </p>
             </div>
           </div>
-        )}
+        ) : activeTab === "bulk" ? (
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            <BulkImport scale={scale} isDarkMode={isDarkMode} t={t} />
+          </div>
+        ) : null}
       </div>
 
       <style>{`

@@ -32,7 +32,9 @@ import GenerateContractModal from "../Components/Modal/GenerateContractModal";
 import { generateBrandedCVPdf } from "../../../utils/dashboard/brandedCVGenerator";
 import { useCompanies } from "../../../hooks/dashboard/useCompanies";
 import { useRanks } from "../../../hooks/dashboard/useRanks";
-import { PieChart, Users, User, ChevronDown, ChevronUp, Edit2, Trash2, Eye, Download, FileText, CheckCircle2, Clock, XCircle, Search, Star, Briefcase } from "lucide-react";
+import { PieChart, Users, User, ChevronDown, ChevronUp, Edit2, Trash2, Eye, Download, FileText, CheckCircle2, Clock, XCircle, Search, Star, Briefcase, Calendar } from "lucide-react";
+import useInterviews from "../../../hooks/dashboard/useInterviews";
+import InterviewFormModal from "../Components/Modal/InterviewFormModal";
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
@@ -95,6 +97,21 @@ export function CVSubmissionsManagement({ scale = 1, isMobile = false, initialIt
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [viewLoading, setViewLoading] = useState(false);
 
+    // Interview Modal States
+    const { createInterview } = useInterviews();
+    const [showInterviewModal, setShowInterviewModal] = useState(false);
+    const [selectedSubmissionForInterview, setSelectedSubmissionForInterview] = useState(null);
+    const handleSaveInterview = async (formData) => {
+        try {
+            await createInterview(formData);
+            addNotification("Interview scheduled successfully", "success");
+            setShowInterviewModal(false);
+            setSelectedSubmissionForInterview(null);
+        } catch (err) {
+            addNotification(err?.message || "Failed to schedule interview", "error");
+        }
+    };
+
     // ── Bulk Actions State ────────────────────────────────────────────────────
     const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
     const [bulkStatusValue, setBulkStatusValue] = useState("Pending");
@@ -113,14 +130,14 @@ export function CVSubmissionsManagement({ scale = 1, isMobile = false, initialIt
     // Keys match BE params: position (int rank ID), status (iexact), date range
     const [filters, setFilters] = useState({
         user: "",
-        status: "",
+        status: "Pending",
         position: "",
         submitted_date_from: "",
         submitted_date_to: ""
     });
     const [activeFilters, setActiveFilters] = useState({
         user: "",
-        status: "",
+        status: "Pending",
         position: "",
         submitted_date_from: "",
         submitted_date_to: ""
@@ -129,10 +146,11 @@ export function CVSubmissionsManagement({ scale = 1, isMobile = false, initialIt
 
     // ── Data fetch ────────────────────────────────────────────────────────────
     useEffect(() => {
-        fetchSubmissions();
+        fetchSubmissions({ status: "Pending" });
         fetchCompanies({ page_size: 1000 });
         fetchRanks();
-    }, [fetchSubmissions, fetchCompanies, fetchRanks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Handle initial item navigation
     const hasOpenedInitial = useRef(false);
@@ -577,13 +595,14 @@ export function CVSubmissionsManagement({ scale = 1, isMobile = false, initialIt
         {
             key: "actions",
             label: "Actions",
-            width: 130,
+            width: 160,
             render: (_, row) => (
-                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={(e) => { e.stopPropagation(); handleView(row); }} className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30" title="View Details"><Eye size={16} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDownloadPdf(row); }} className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30" title="Download PDF"><Download size={16} /></button>
-                    {canEdit && <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="p-1.5 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/30" title="Edit"><Edit2 size={16} /></button>}
-                    {canDelete && <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30" title="Delete"><Trash2 size={16} /></button>}
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={(e) => { e.stopPropagation(); handleView(row); }} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details"><Eye size={18} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDownloadPdf(row); }} className="p-1.5 text-emerald-500 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Download PDF"><Download size={18} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedSubmissionForInterview(row); setShowInterviewModal(true); }} className="p-1.5 text-purple-500 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20 rounded-lg transition-colors" title="Schedule Interview"><Calendar size={18} /></button>
+                    {canEdit && <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="p-1.5 text-amber-500 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Edit"><Edit2 size={18} /></button>}
+                    {canDelete && <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} className="p-1.5 text-rose-500 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 rounded-lg transition-colors" title="Delete"><Trash2 size={18} /></button>}
                 </div>
             )
         },
@@ -598,11 +617,11 @@ export function CVSubmissionsManagement({ scale = 1, isMobile = false, initialIt
     }, [buildBackendFilters, fetchSubmissions]);
 
     const handleResetFilters = useCallback(() => {
-        const empty = { user: "", status: "", position: "", submitted_date_from: "", submitted_date_to: "" };
+        const empty = { user: "", status: "Pending", position: "", submitted_date_from: "", submitted_date_to: "" };
         setFilters(empty);
         setActiveFilters(empty);
         setIsSidebarOpen(false);
-        fetchSubmissions({ page: 1 });
+        fetchSubmissions({ status: "Pending", page: 1 });
     }, [fetchSubmissions]);
 
     // ── Saved preset handlers ─────────────────────────────────────────────────
@@ -955,6 +974,21 @@ export function CVSubmissionsManagement({ scale = 1, isMobile = false, initialIt
                     </p>
                     <style>{`@keyframes cv-spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
+            )}
+
+            {showInterviewModal && (
+                <InterviewFormModal
+                    isOpen={showInterviewModal}
+                    interview={null}
+                    onClose={() => {
+                        setShowInterviewModal(false);
+                        setSelectedSubmissionForInterview(null);
+                    }}
+                    onSave={handleSaveInterview}
+                    preSelectedCandidate={selectedSubmissionForInterview?.user?.id || selectedSubmissionForInterview?.user_id}
+                    preSelectedPosition={selectedSubmissionForInterview?.position?.id || selectedSubmissionForInterview?.position}
+                    scale={scale}
+                />
             )}
 
             {showViewModal && (

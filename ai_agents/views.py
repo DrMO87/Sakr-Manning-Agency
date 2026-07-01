@@ -70,6 +70,7 @@ class ChatSearchView(APIView):
         session_id = request.data.get("session_id")
         search_type = request.data.get("search_type", "general")
         groq_api_key = request.data.get("groq_api_key")
+        api_keys_config = request.data.get("api_keys_config")
         user_id = request.user.id if request.user.is_authenticated else None
 
         if not message:
@@ -107,13 +108,18 @@ class ChatSearchView(APIView):
                 # Get AI response using the agent
                 if search_type in ["database", "general"]:
                     from .sql_agent import process_database_question
-                    response_content = process_database_question(message, groq_api_key=groq_api_key)
+                    response_content, updated_api_keys_config = process_database_question(
+                        message, 
+                        groq_api_key=groq_api_key,
+                        api_keys_config=api_keys_config
+                    )
                 else:
-                    response_content = get_agent_response(
+                    response_content, updated_api_keys_config = get_agent_response(
                         query=message,
                         conversation_history=history,
                         session_id=session_id,
-                        groq_api_key=groq_api_key
+                        groq_api_key=groq_api_key,
+                        api_keys_config=api_keys_config
                     )
 
                 # Save assistant response
@@ -141,6 +147,7 @@ class ChatSearchView(APIView):
                     "response_time": round(response_time, 2),
                     "message_count": session.total_messages,
                     "timestamp": assistant_message.timestamp.isoformat(),
+                    "api_keys_status": updated_api_keys_config,
                     "status": "success"
                 }, status=status.HTTP_200_OK)
 

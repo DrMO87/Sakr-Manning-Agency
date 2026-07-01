@@ -1,0 +1,97 @@
+def _field(text: str, *labels: str, default: str = "") -> str:
+    """
+    Extract the value after the first matching label (case-insensitive).
+    Handles multiple CV text layouts, including complex table rows.
+    """
+    for label in labels:
+        label_lower = label.lower()
+
+        # 0. NATIVE TABLE PARSING
+        # Directly scan the 2D arrays extracted from python-docx / pdfplumber
+        # to avoid flattened-text regex issues.
+        for table in _get_tables():
+            for r_idx, row in enumerate(table):
+                for c_idx, cell in enumerate(row):
+                    if label_lower in cell.lower():
+                        # Case A: Vertical Table (Key | Value in the same row)
+                        val = None
+                        for next_c in range(c_idx + 1, len(row)):
+                            t = row[next_c].strip()
+                            if t and t.upper() != cell.strip().upper():
+                                val = t
+                                break
+                        
+                        if val and len(val) > 1 and val.upper() not in [l.upper() for l in labels]:
+                            return val
+
+                        # Case B: Horizontal Table (Header row, Value row immediately below)
+                        if r_idx + 1 < len(table) and c_idx < len(table[r_idx + 1]):
+                            val = table[r_idx + 1][c_idx].strip()
+                            if val and len(val) > 1 and val.upper() not in [l.upper() for l in labels] and val.upper() != cell.strip().upper():
+                                return val
+                            
+        esc = re.escape(label)
+        
+        # 1. Colon/Dash separator (most common in typed CVs)
+        m = re.search(rf"(?<!\w){esc}\s*[:\-]\s*(.+)", text, re.IGNORECASE)
+        if m:
+            val = m.group(1).split("\n")[0].strip()
+            val = re.split(r"[ \t]{2,}", val)[0].strip()
+            if len(val) > 1 and val.upper() not in [l.upper() for l in labels]: return val
+
+        # 2. Table Header Match (Same Line or Next Line)
+        for line_match in re.finditer(rf"^(.*?{esc}.*)$", text, re.MULTILINE | re.IGNORECASE):
+            line = line_match.group(1)
+            idx = line.lower().find(label.lower())
+            
+            after_line_text = text[line_match.end():]
+            m_next = re.match(r"[ \t]*\n([^\n]+)", after_line_text)
+            
+            headers = [(m.group(), m.start()) for m in re.finditer(r"[^\s]+(?: [^\s]+)*", line)]
+            next_line = m_next.group(1) if m_next else ""
+            values = [(m.group(), m.start()) for m in re.finditer(r"[^\s]+(?: [^\s]+)*", next_line)]
+            
+            # Is it a table row with multiple headers and values below?
+            is_table = len(headers) > 1 and len(values) >= 1
+            
+            if is_table:
+                for i, (h_text, h_pos) in enumerate(headers):
+                    if label.lower() in h_text.lower():
+                        # If python-docx flattened this table with pipe symbols, use exact column index matching!
+                        if "|" in line and "|" in next_line:
+                            pipe_headers = [h.strip() for h in line.split("|")]
+                            pipe_values = [v.strip() for v in next_line.split("|")]
+                            col_idx = -1
+                            for c_i, ph in enumerate(pipe_headers):
+                                if label.lower() in ph.lower():
+                                    col_idx = c_i
+                                    break
+                            if col_idx != -1 and col_idx < len(pipe_values):
+                                val = pipe_values[col_idx]
+                                if len(val) > 1 and val.upper() not in [l.upper() for l in labels]: return val
+                                
+                        # Otherwise, fallback to visual spatial alignment (for PDFs)
+                        valid_values = [v for v in values if abs(v[1] - h_pos) <= 20]
+                        if valid_values:
+                            best_val = min(valid_values, key=lambda v: abs(v[1] - h_pos))
+                            val = best_val[0]
+                            if len(val) > 1 and val.upper() not in [l.upper() for l in labels]: return val
+                        break
+            else:
+                # Not a table, try same line separated by large spaces
+                after_label = line[idx + len(label):]
+                m_same = re.match(r"^[ \t]{2,}(.+)", after_label)
+                if m_same:
+                    val = m_same.group(1).strip()
+                    val = re.split(r"[ \t]{2,}", val)[0].strip()
+                    if len(val) > 1 and val.upper() not in [l.upper() for l in labels]: return val
+                    
+                # Next line fallback
+                if next_line:
+                    val = next_line.strip()
+                    val = re.split(r"[ \t]{2,}", val)[0].strip()
+                    if len(val) > 1 and val.upper() not in [l.upper() for l in labels]: return val
+
+    return default
+
+

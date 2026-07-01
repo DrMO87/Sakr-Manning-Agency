@@ -1,0 +1,23 @@
+The extraction engine has been completely rewritten. Here's what I did:
+
+### What Changed
+
+**Replaced the old fragile 3-pass approach** in [document_to_json.py](file:///d:/M SQUARE (MSQ)/CODE SQUARE/Sakr-Manning-Agency-Backend-main/Sakr-Manning-Agency-Backend-main/ai_document/document_to_json.py) with a **single comprehensive Groq LLM call**:
+
+1. **New `_FullCVExtraction` model** (60+ fields) — covers all non-table sections (0-7, 10-12) in one schema
+2. **New `_build_comprehensive_prompt()`** — sends the **full document text** (up to 12,000 chars) + **all structured table data** to the LLM with strict extraction rules
+3. **New `_map_comprehensive_result()`** — maps the flat LLM output back to the nested numbered-section format
+4. **Groq-only** — removed Gemini/Ollama fallbacks as requested
+5. **`max_tokens` raised from 1024 → 4096** — allows the LLM to output complete data for all sections
+
+### Why It Was Broken Before
+- The old `_field()` regex grabbed the **first match** for generic labels like "Name", often pulling the wrong value
+- The LLM only received **3,000 chars** of text — no table data at all
+- 3 separate LLM calls each with limited context couldn't understand the document as a whole
+
+### New Flow
+```
+Regex baseline → Comprehensive LLM (all sections) → Marine Courses LLM → Sea Service LLM
+```
+
+Upload the **Mohmed EL Gendy CV** again to verify — all fields should now match the original document exactly. See the full [walkthrough](file:///C:/Users/dell/.gemini/antigravity/brain/4aab20b5-398a-49fe-97ff-0a03795f4a77/walkthrough.md) for details.

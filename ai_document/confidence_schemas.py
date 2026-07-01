@@ -5,100 +5,116 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Any, Dict, Union
 
 
-class ExtractedField(BaseModel):
-    """Wrapper for any extracted field to include confidence tracking."""
-    value: Union[str, bool, None] = Field(description="The extracted value. Use empty string or None if missing.")
-    confidence: float = Field(default=1.0, description="Confidence score of the extraction from 0.0 to 1.0. Lower it if the text was ambiguous or hard to read.")
-    doubted: bool = Field(default=False, description="Set to true if you are unsure about the extraction, if it might be a hallucination, or if the source text was ambiguous.")
+class ExtractedString(BaseModel):
+    value: Optional[str] = Field(default="")
+    confidence: float = Field(default=1.0)
+    doubted: bool = Field(default=False)
+
+class ExtractedBool(BaseModel):
+    value: Optional[bool] = Field(default=False)
+    confidence: float = Field(default=1.0)
+    doubted: bool = Field(default=False)
+
+
+class ApplicationMeta(BaseModel):
+    application_for_position_as: ExtractedString = Field(default_factory=ExtractedString)
+    register_code: ExtractedString = Field(default_factory=ExtractedString)
+    other_position: ExtractedString = Field(default_factory=ExtractedString)
+    register_date: ExtractedString = Field(default_factory=ExtractedString)
+    last_update_data: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class MaritalStatus(BaseModel):
-    single: ExtractedField = Field(default_factory=lambda: ExtractedField(value=False))
-    married: ExtractedField = Field(default_factory=lambda: ExtractedField(value=False))
+    single: ExtractedBool = Field(default_factory=ExtractedBool)
+    married: ExtractedBool = Field(default_factory=ExtractedBool)
 
 
 class PersonalDetails(BaseModel):
-    full_name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    date_of_birth: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    full_name: ExtractedString = Field(default_factory=ExtractedString)
+    date_of_birth: ExtractedString = Field(default_factory=ExtractedString)
     marital_status: MaritalStatus = Field(default_factory=MaritalStatus)
-    nationality: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    height_cm: ExtractedField = Field(default_factory=lambda: ExtractedField(value=None))
-    weight_kg: ExtractedField = Field(default_factory=lambda: ExtractedField(value=None))
-    place_of_birth: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    overall_size: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    shirt_size: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    nearest_port: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    trouser_size: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    shoes_size: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    nationality: ExtractedString = Field(default_factory=ExtractedString)
+    height_cm: ExtractedString = Field(default_factory=ExtractedString)
+    weight_kg: ExtractedString = Field(default_factory=ExtractedString)
+    place_of_birth: ExtractedString = Field(default_factory=ExtractedString)
+    overall_size: ExtractedString = Field(default_factory=ExtractedString)
+    shirt_size: ExtractedString = Field(default_factory=ExtractedString)
+    nearest_port: ExtractedString = Field(default_factory=ExtractedString)
+    trouser_size: ExtractedString = Field(default_factory=ExtractedString)
+    shoes_size: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class MarlineTest(BaseModel):
-    issued_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    result_percentage: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_by_authority: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_at: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    issued_date: ExtractedString = Field(default_factory=ExtractedString)
+    result_percentage: ExtractedString = Field(default_factory=ExtractedString)
+    issued_by_authority: ExtractedString = Field(default_factory=ExtractedString)
+    issued_at: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class LanguageLevel(BaseModel):
-    fluent: ExtractedField = Field(default_factory=lambda: ExtractedField(value=False))
-    good: ExtractedField = Field(default_factory=lambda: ExtractedField(value=False))
-    average: ExtractedField = Field(default_factory=lambda: ExtractedField(value=False))
-    poor: ExtractedField = Field(default_factory=lambda: ExtractedField(value=False))
+    fluent: ExtractedBool = Field(default_factory=ExtractedBool)
+    good: ExtractedBool = Field(default_factory=ExtractedBool)
+    average: ExtractedBool = Field(default_factory=ExtractedBool)
+    poor: ExtractedBool = Field(default_factory=ExtractedBool)
 
 
 class Education(BaseModel):
-    college_school: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    college_school: ExtractedString = Field(default_factory=ExtractedString)
     marline_test: MarlineTest = Field(default_factory=MarlineTest)
     english_language: LanguageLevel = Field(default_factory=LanguageLevel)
     german_language: LanguageLevel = Field(default_factory=LanguageLevel)
 
 
 class ContactDetails(BaseModel):
-    home_address_city: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    e_mail: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    mobile_tel: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    home_address_city: ExtractedString = Field(default_factory=ExtractedString)
+    e_mail: ExtractedString = Field(default_factory=ExtractedString)
+    mobile_tel: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class TravelDocument(BaseModel):
-    type: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    document_no: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    iss_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    exp_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    iss_by_authority: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    place_of_issue: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    type: ExtractedString = Field(default_factory=ExtractedString)
+    document_no: ExtractedString = Field(default_factory=ExtractedString)
+    iss_date: ExtractedString = Field(default_factory=ExtractedString)
+    exp_date: ExtractedString = Field(default_factory=ExtractedString)
+    iss_by_authority: ExtractedString = Field(default_factory=ExtractedString)
+    place_of_issue: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class ProfessionalQualification(BaseModel):
-    certificate_name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    number: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issue_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    expiry_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_by: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_at: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    certificate_name: ExtractedString = Field(default_factory=ExtractedString)
+    number: ExtractedString = Field(default_factory=ExtractedString)
+    issue_date: ExtractedString = Field(default_factory=ExtractedString)
+    expiry_date: ExtractedString = Field(default_factory=ExtractedString)
+    issued_by: ExtractedString = Field(default_factory=ExtractedString)
+    issued_at: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class NextOfKin(BaseModel):
-    full_name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    address_country: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    tel_no_mobile: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    relationship: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    email: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    full_name: ExtractedString = Field(default_factory=ExtractedString)
+    relationship: ExtractedString = Field(default_factory=ExtractedString)
+    address: ExtractedString = Field(default_factory=ExtractedString)
+    tel_no: ExtractedString = Field(default_factory=ExtractedString)
+    mobile: ExtractedString = Field(default_factory=ExtractedString)
+    # Old fields kept optional
+    address_country: ExtractedString = Field(default_factory=ExtractedString)
+    tel_no_mobile: ExtractedString = Field(default_factory=ExtractedString)
+    email: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class HealthCertificate(BaseModel):
-    flag_state: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    number: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issue_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    expiry_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_by: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_at: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    flag_state: ExtractedString = Field(default_factory=ExtractedString)
+    number: ExtractedString = Field(default_factory=ExtractedString)
+    issue_date: ExtractedString = Field(default_factory=ExtractedString)
+    expiry_date: ExtractedString = Field(default_factory=ExtractedString)
+    issued_by: ExtractedString = Field(default_factory=ExtractedString)
+    issued_at: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class Covid19(BaseModel):
-    vaccination_name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    first_dose: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    second_dose: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    other_does_or_remarks: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    vaccination_name: ExtractedString = Field(default_factory=ExtractedString)
+    first_dose: ExtractedString = Field(default_factory=ExtractedString)
+    second_dose: ExtractedString = Field(default_factory=ExtractedString)
+    other_does_or_remarks: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class HealthSection(BaseModel):
@@ -107,51 +123,65 @@ class HealthSection(BaseModel):
 
 
 class MarineCourse(BaseModel):
-    course_name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    number: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issue_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    expiry_date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    issued_by_at: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    course_name: ExtractedString = Field(default_factory=ExtractedString)
+    number: ExtractedString = Field(default_factory=ExtractedString)
+    issue_date: ExtractedString = Field(default_factory=ExtractedString)
+    expiry_date: ExtractedString = Field(default_factory=ExtractedString)
+    issued_by_at: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class ApplicantInfo(BaseModel):
-    name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    rank: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    register_code: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    name: ExtractedString = Field(default_factory=ExtractedString)
+    rank: ExtractedString = Field(default_factory=ExtractedString)
+    register_code: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class ServiceRecord(BaseModel):
-    company_name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    rank: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    vessel_name_imo_number: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    flag: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    signed_on: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    signed_off: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    period: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    vessel_type: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    dwt_grt: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    engine_type: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    bh_kw: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    reason_for_sign_off: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    company_name: ExtractedString = Field(default_factory=ExtractedString)
+    rank: ExtractedString = Field(default_factory=ExtractedString)
+    vessel_name: ExtractedString = Field(default_factory=ExtractedString)
+    signed_on: ExtractedString = Field(default_factory=ExtractedString)
+    signed_off: ExtractedString = Field(default_factory=ExtractedString)
+    period: ExtractedString = Field(default_factory=ExtractedString)
+    vessel_type: ExtractedString = Field(default_factory=ExtractedString)
+    dwt: ExtractedString = Field(default_factory=ExtractedString)
+    engine_type: ExtractedString = Field(default_factory=ExtractedString)
+    bh: ExtractedString = Field(default_factory=ExtractedString)
+    kw: ExtractedString = Field(default_factory=ExtractedString)
+    # Old fields kept optional
+    vessel_name_imo_number: ExtractedString = Field(default_factory=ExtractedString)
+    flag: ExtractedString = Field(default_factory=ExtractedString)
+    dwt_grt: ExtractedString = Field(default_factory=ExtractedString)
+    bh_kw: ExtractedString = Field(default_factory=ExtractedString)
+    reason_for_sign_off: ExtractedString = Field(default_factory=ExtractedString)
+
+
+class SpecialisedExperience(BaseModel):
+    name: ExtractedString = Field(default_factory=ExtractedString)
+    type: ExtractedString = Field(default_factory=ExtractedString)
+    from_date: ExtractedString = Field(default_factory=ExtractedString)
+    to_date: ExtractedString = Field(default_factory=ExtractedString)
+    comments: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class SeaServiceSection(BaseModel):
     applicant_info: ApplicantInfo = Field(default_factory=ApplicantInfo)
     service_records: List[ServiceRecord] = []
+    specialised_experience: List[SpecialisedExperience] = []
 
 
 class Reference(BaseModel):
-    no: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    company_management_country: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    position: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    name: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    tel: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    email: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    no: ExtractedString = Field(default_factory=ExtractedString)
+    company_management_country: ExtractedString = Field(default_factory=ExtractedString)
+    position: ExtractedString = Field(default_factory=ExtractedString)
+    name: ExtractedString = Field(default_factory=ExtractedString)
+    tel: ExtractedString = Field(default_factory=ExtractedString)
+    email: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class DeclarationAnswer(BaseModel):
-    answer: ExtractedField = Field(default_factory=lambda: ExtractedField(value="NO"))
-    details: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    answer: ExtractedString = Field(default_factory=lambda: ExtractedString(value="NO"))
+    details: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class DeclarationQuestions(BaseModel):
@@ -163,24 +193,25 @@ class DeclarationQuestions(BaseModel):
 
 class Declaration(BaseModel):
     questions: DeclarationQuestions = Field(default_factory=DeclarationQuestions)
-    consent_statement: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    place: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    signature: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    consent_statement: ExtractedString = Field(default_factory=ExtractedString)
+    place: ExtractedString = Field(default_factory=ExtractedString)
+    date: ExtractedString = Field(default_factory=ExtractedString)
+    signature: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class ResponsiblePerson(BaseModel):
-    name_signature: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    date: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    name_signature: ExtractedString = Field(default_factory=ExtractedString)
+    date: ExtractedString = Field(default_factory=ExtractedString)
 
 
 class OfficeUseOnly(BaseModel):
-    initial_assessment_of_applicant: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
-    comments: ExtractedField = Field(default_factory=lambda: ExtractedField(value=""))
+    initial_assessment_of_applicant: ExtractedString = Field(default_factory=ExtractedString)
+    comments: ExtractedString = Field(default_factory=ExtractedString)
     responsible_person: ResponsiblePerson = Field(default_factory=ResponsiblePerson)
 
 
 class SeafarerApplicationWithConfidence(BaseModel):
+    field_0_application_meta: ApplicationMeta = Field(default_factory=ApplicationMeta, alias="0_application_meta")
     field_1_personal_details: PersonalDetails = Field(default_factory=PersonalDetails, alias="1_personal_details")
     field_2_education: Education = Field(default_factory=Education, alias="2_education")
     field_3_contact_details: ContactDetails = Field(default_factory=ContactDetails, alias="3_contact_details")
@@ -199,6 +230,7 @@ class SeafarerApplicationWithConfidence(BaseModel):
     def to_numbered_dict(self) -> dict:
         """Export with the numbered key names."""
         return {
+            "0_application_meta": self.field_0_application_meta.model_dump(),
             "1_personal_details": self.field_1_personal_details.model_dump(),
             "2_education": self.field_2_education.model_dump(),
             "3_contact_details": self.field_3_contact_details.model_dump(),
@@ -217,7 +249,7 @@ class SeafarerApplicationWithConfidence(BaseModel):
 
 def unwrap_confidence(data: Any) -> Any:
     """
-    Recursively remove the ExtractedField wrapper and return just the values.
+    Recursively remove the ExtractedString wrapper and return just the values.
     This is used before saving to the database so the DB schema remains unchanged.
     """
     if isinstance(data, dict):

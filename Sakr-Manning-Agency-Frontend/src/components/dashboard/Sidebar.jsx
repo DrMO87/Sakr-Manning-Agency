@@ -4,6 +4,8 @@ import React from "react";
 import { COLORS } from "./Constants";
 import { X, Bot, ChevronLeft, ChevronRight, Briefcase, CircleDollarSign } from "lucide-react";
 import { ASSETS } from "../../utils/constants";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const THEMES = {
   blue: { activeBg: "bg-blue-600/10", activeText: "text-blue-400", indicator: "bg-blue-500", iconActive: "text-blue-500" },
@@ -33,6 +35,15 @@ const SHARED_MENU_ITEMS = [
 
 export const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggle }) => {
   const menuItems = SHARED_MENU_ITEMS;
+  const sidebarRef = React.useRef(null);
+  gsap.registerPlugin(useGSAP);
+
+  useGSAP(() => {
+    gsap.fromTo(".sidebar-menu-item", 
+      { opacity: 0, x: -30 }, 
+      { opacity: 1, x: 0, duration: 0.5, stagger: 0.08, ease: "back.out(1.2)", delay: 0.4 }
+    );
+  }, { scope: sidebarRef });
 
   return (
     <>
@@ -42,6 +53,7 @@ export const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggle }) =>
         }
       `}</style>
       <aside
+        ref={sidebarRef}
         className={`hide-sidebar-scrollbar h-full bg-slate-900 flex flex-col py-6 z-50 text-white shadow-xl border-r border-slate-800 transition-all duration-300 relative ${
           isCollapsed ? "w-[80px]" : "w-[240px]"
         }`}
@@ -73,7 +85,7 @@ export const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggle }) =>
           {menuItems.map((item) => {
             const isActive = currentPage === item.id;
             return (
-              <div key={item.id} className="relative group">
+              <div key={item.id} className="sidebar-menu-item relative group opacity-0">
                 <button
                   onClick={() => onPageChange(item.id)}
                   className={`w-full h-12 flex items-center rounded-xl transition-all duration-300 relative overflow-hidden ${

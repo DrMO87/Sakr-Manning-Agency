@@ -1,0 +1,315 @@
+[
+  {
+    "Description": "Update local extraction to handle ApplicationMeta and new ServiceRecord fields.",
+    "Instruction": "Add _extract_application_meta function, update _run_local_extraction, and fix ServiceRecord field mappings.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1432,
+        "ReplacementContent": "def _extract_application_meta(text: str) -> ApplicationMeta:\n    from .schemas import ApplicationMeta\n    return ApplicationMeta(\n        application_for_position_as=_field(text, \"Application For Position as\", \"Position Applied\", \"Rank\"),\n        register_code=_field(text, \"Register Code\", \"Reg. Code\"),\n        other_position=_field(text, \"Other Position (If Any)\", \"Other Position\"),\n        register_date=_field(text, \"Register Date\"),\n        last_update_data=_field(text, \"Last up Date Data\", \"Last Update Date\"),\n    )\n\ndef _extract_personal(text: str) -> PersonalDetails:",
+        "StartLine": 1432,
+        "TargetContent": "def _extract_personal(text: str) -> PersonalDetails:"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1655,
+        "ReplacementContent": "                    company_name=_field(window, \"Company\", \"Employer\"),\n                    rank=rank,\n                    vessel_name=_field(window, \"Vessel Name\", \"Vessel\", \"Ship\", \"MV\", \"MT\"),\n                    vessel_name_imo_number=_field(window, \"Vessel Name\", \"Vessel\", \"Ship\", \"MV\", \"MT\"),\n                    flag=_field(window, \"Flag\"),\n                    signed_on=dates[0],\n                    signed_off=dates[1],\n                    vessel_type=_field(window, \"Vessel Type\", \"Ship Type\", \"Type\"),\n                    dwt=_field(window, \"DWT\", \"DWT/GRT\", \"GRT\"),\n                    dwt_grt=_field(window, \"DWT\", \"DWT/GRT\", \"GRT\"),\n                    engine_type=_field(window, \"Engine Type\", \"Engine\"),\n                    bh=_field(window, \"BH\", \"BHP\", \"KW\", \"BH/KW\"),\n                    kw=_field(window, \"KW\", \"BH/KW\", \"BHP\"),\n                    bh_kw=_field(window, \"BH/KW\", \"BHP\", \"KW\"),\n                    reason_for_sign_off=_field(window, \"Reason\", \"Sign Off Reason\"),\n                ))\n\n    return SeaServiceSection(applicant_info=info, service_records=records, specialised_experience=[])",
+        "StartLine": 1642,
+        "TargetContent": "                    company_name=_field(window, \"Company\", \"Employer\"),\n                    rank=rank,\n                    vessel_name_imo_number=_field(window, \"Vessel\", \"Ship\", \"MV\", \"MT\"),\n                    flag=_field(window, \"Flag\"),\n                    signed_on=dates[0],\n                    signed_off=dates[1],\n                    vessel_type=_field(window, \"Vessel Type\", \"Ship Type\", \"Type\"),\n                    dwt_grt=_field(window, \"DWT/GRT\", \"DWT\", \"GRT\"),\n                    engine_type=_field(window, \"Engine Type\", \"Engine\"),\n                    bh_kw=_field(window, \"BH/KW\", \"BHP\", \"KW\"),\n                    reason_for_sign_off=_field(window, \"Reason\", \"Sign Off Reason\"),\n                ))\n\n    return SeaServiceSection(applicant_info=info, service_records=records)"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1738,
+        "ReplacementContent": "class _ServiceRecordItem(BaseModel):\n    company_name: str = \"\"\n    rank: str = \"\"\n    vessel_name: str = \"\"\n    signed_on: str = \"\"\n    signed_off: str = \"\"\n    period: str = \"\"\n    vessel_type: str = \"\"\n    dwt: str = \"\"\n    engine_type: str = \"\"\n    bh: str = \"\"\n    kw: str = \"\"\n    \nclass _SpecialisedExperienceItem(BaseModel):\n    name: str = \"\"\n    type: str = \"\"\n    from_date: str = \"\"\n    to_date: str = \"\"\n    comments: str = \"\"",
+        "StartLine": 1726,
+        "TargetContent": "class _ServiceRecordItem(BaseModel):\n    company_name: str = \"\"\n    rank: str = \"\"\n    vessel_name: str = \"\"\n    signed_on: str = \"\"\n    signed_off: str = \"\"\n    period: str = \"\"\n    vessel_type: str = \"\"\n    dwt_grt: str = \"\"\n    engine_type: str = \"\"\n    bh_kw: str = \"\""
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1744,
+        "ReplacementContent": "class _SeaServiceResult(BaseModel):\n    applicant_name: str = \"\"\n    rank: str = \"\"\n    register_code: str = \"\"\n    service_records: List[_ServiceRecordItem] = Field(default_factory=list)\n    specialised_experience: List[_SpecialisedExperienceItem] = Field(default_factory=list)",
+        "StartLine": 1739,
+        "TargetContent": "class _SeaServiceResult(BaseModel):\n    applicant_name: str = \"\"\n    rank: str = \"\"\n    register_code: str = \"\"\n    service_records: List[_ServiceRecordItem] = Field(default_factory=list)"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1834,
+        "ReplacementContent": "    _set_tables(tables)  # Thread-safe table store for _field() helpers\n\n    app_meta = _extract_application_meta(text)\n    personal = _extract_personal(text)",
+        "StartLine": 1816,
+        "TargetContent": "    _set_tables(tables)  # Thread-safe table store for _field() helpers\n\n    personal = _extract_personal(text)"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1848,
+        "ReplacementContent": "    return {\n        \"0_application_meta\": app_meta.model_dump(),\n        \"1_personal_details\": personal.model_dump(),\n        \"2_education\": education.model_dump(),\n        \"3_contact_details\": contact.model_dump(),\n        \"4_travel_documents\": [d.model_dump() for d in travel],\n        \"5_professional_qualification_certificate_of_competency\": [\n            q.model_dump() for q in qualifications\n        ],\n        \"6_next_of_kin_emergency_contact\": nok.model_dump(),\n        \"7_health_certificates_and_vaccinations\": health.model_dump(),\n        \"8_marine_courses\": [c.model_dump() for c in marine_courses],\n        \"9_complete_sea_service_details\": sea_service.model_dump(),\n        \"10_references\": [r.model_dump() for r in references],\n        \"11_declaration\": declaration.model_dump(),\n        \"12_for_office_use_only\": office.model_dump(),\n    }",
+        "StartLine": 1833,
+        "TargetContent": "    return {\n        \"1_personal_details\": personal.model_dump(),\n        \"2_education\": education.model_dump(),\n        \"3_contact_details\": contact.model_dump(),\n        \"4_travel_documents\": [d.model_dump() for d in travel],\n        \"5_professional_qualification_certificate_of_competency\": [\n            q.model_dump() for q in qualifications\n        ],\n        \"6_next_of_kin_emergency_contact\": nok.model_dump(),\n        \"7_health_certificates_and_vaccinations\": health.model_dump(),\n        \"8_marine_courses\": [c.model_dump() for c in marine_courses],\n        \"9_complete_sea_service_details\": sea_service.model_dump(),\n        \"10_references\": [r.model_dump() for r in references],\n        \"11_declaration\": declaration.model_dump(),\n        \"12_for_office_use_only\": office.model_dump(),\n    }"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py"
+  },
+  {
+    "Description": "Fix NameError in ai_document\\document_to_json.py by using string literal for type hint",
+    "Instruction": "Change `def _extract_application_meta(text: str) -> ApplicationMeta:` to `def _extract_application_meta(text: str) -> 'ApplicationMeta':`",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1385,
+        "ReplacementContent": "def _extract_application_meta(text: str) -> 'ApplicationMeta':",
+        "StartLine": 1385,
+        "TargetContent": "def _extract_application_meta(text: str) -> ApplicationMeta:"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Fixing NameError",
+    "toolSummary": "Fix NameError in document_to_json"
+  },
+  {
+    "Description": "Fix table empty cell bleed-over",
+    "Instruction": "Add Case C to immediately return empty string if an empty cell is explicitly detected in a table.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1265,
+        "ReplacementContent": "                        # Case B: Horizontal Table (Header row, Value row immediately below)\n                        if r_idx + 1 < len(table) and c_idx < len(table[r_idx + 1]):\n                            val = table[r_idx + 1][c_idx].strip()\n                            if val and _is_valid_value(val, labels) and val.upper() != cell.strip().upper():\n                                return val\n\n                        # Case C: Empty cell definitively found\n                        # If the cell text is almost EXACTLY the label, and we found no value, return \"\"\n                        # to prevent greedy regex fallback from grabbing neighboring sections.\n                        c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())\n                        l_clean = re.sub(r'[^a-z0-9]', '', label_lower)\n                        if l_clean == c_clean or l_clean in c_clean.replace(\"cm\", \"\").replace(\"kg\", \"\"):\n                            return \"\"",
+        "StartLine": 1259,
+        "TargetContent": "                        # Case B: Horizontal Table (Header row, Value row immediately below)\n                        if r_idx + 1 < len(table) and c_idx < len(table[r_idx + 1]):\n                            val = table[r_idx + 1][c_idx].strip()\n                            if val and _is_valid_value(val, labels) and val.upper() != cell.strip().upper():\n                                return val"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Adding Case C to _field",
+    "toolSummary": "Fix _field table extraction"
+  },
+  {
+    "Description": "Improve Marital Status checkbox extraction",
+    "Instruction": "Update the marital status logic to correctly interpret checked boxes using regex and proximity checking.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1425,
+        "ReplacementContent": "    ms_raw = _field(text, \"Marital Status\", \"Marital_Status\", \"Status\", \"Marital\").lower()\n    \n    # Fuzzy check: if the extracted value contains keywords, set the bools\n    is_married = any(kw in ms_raw for kw in [\"married\", \"widow\", \"divorce\"])\n    is_single = any(kw in ms_raw for kw in [\"single\", \"unmarried\", \"bachelor\"])\n    \n    # In some layouts, the [x] is what we look for. \n    # If the text is \"[x] Single [ ] Married\", both keywords exist.\n    import re\n    checked_match = re.search(r'\\[\\s*[xXvV\u2713\u2611\u2612]\\s*\\]|\u2612|\u2611|\u2713', ms_raw)\n    if checked_match:\n        x_idx = checked_match.start()\n        m_idx = ms_raw.find(\"married\")\n        s_idx = ms_raw.find(\"single\")\n        \n        if m_idx != -1 and s_idx != -1:\n            if abs(x_idx - m_idx) < abs(x_idx - s_idx):\n                is_married = True\n                is_single = False\n            else:\n                is_single = True\n                is_married = False\n        elif m_idx != -1:\n            is_married = True\n            is_single = False\n        elif s_idx != -1:\n            is_single = True\n            is_married = False\n\n    marital = MaritalStatus(single=is_single, married=is_married)",
+        "StartLine": 1404,
+        "TargetContent": "    # Marital Status: search for labels and then check for single/married keywords in the result\n    ms_raw = _field(text, \"Marital Status\", \"Marital_Status\", \"Status\", \"Marital\").lower()\n    \n    # Fuzzy check: if the extracted value contains keywords, set the bools\n    is_married = any(kw in ms_raw for kw in [\"married\", \"widow\", \"divorce\"])\n    is_single = any(kw in ms_raw for kw in [\"single\", \"unmarried\", \"bachelor\"])\n    \n    # In some layouts, the [x] is what we look for. \n    # If the text is \"[x] Single [ ] Married\", both keywords exist. \n    # We need to check if [x] is closer to which one.\n    if \"[x]\" in ms_raw or \"[v]\" in ms_raw or \"o\"\" in ms_raw:\n        # Very simple heuristic: which one has the marking closest to it\n        m_idx = ms_raw.find(\"married\")\n        s_idx = ms_raw.find(\"single\")\n        x_idx = ms_raw.find(\"[x]\") if \"[x]\" in ms_raw else ms_raw.find(\"o\"\")\n        if x_idx != -1:\n            if m_idx != -1 and abs(x_idx - m_idx) < abs(x_idx - s_idx if s_idx != -1 else 999):\n                is_married = True\n                is_single = False\n            elif s_idx != -1:\n                is_single = True\n                is_married = False\n\n    marital = MaritalStatus(single=is_single, married=is_married)"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Fixing Marital Status checkbox extraction",
+    "toolSummary": "Fix marital status"
+  },
+  {
+    "Description": "Improve header rejection",
+    "Instruction": "Update _is_valid_value to correctly reject section headers with trailing punctuation or slashes.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1229,
+        "ReplacementContent": "    if re.match(r'^\\d{1,2}\\.?\\s+[a-z\\s/:\\-]+$', val_lower):\n        return False",
+        "StartLine": 1228,
+        "TargetContent": "    if re.match(r'^\\d{1,2}\\.?\\s+[a-z\\s]+$', val_lower):\n        return False"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Updating header rejection regex",
+    "toolSummary": "Fix header rejection"
+  },
+  {
+    "Description": "Update AI CV extractor to be more robust for marital status and bleed-over",
+    "Instruction": "Add more labels to KNOWN_CV_LABELS, fix Marital Status BOTH ticked bug, and improve empty cell substring match.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1193,
+        "ReplacementContent": "KNOWN_CV_LABELS = {\n    \"height\", \"weight\", \"place of birth\", \"marital status\", \"overall size\", \"shirt size\",\n    \"trouser size\", \"shoes size\", \"nearest port\", \"date of birth\", \"nationality\",\n    \"full name\", \"name\", \"email\", \"phone\", \"mobile\", \"address\", \"passport\",\n    \"seaman book\", \"college\", \"school\", \"marlins test\", \"english language\", \"german language\",\n    \"certificate name\", \"number\", \"issue date\", \"expiry date\", \"issued by\",\n    \"issued at\", \"flag state\", \"first dose\", \"second dose\", \"course name\", \"company name\",\n    \"rank\", \"vessel name\", \"flag\", \"signed on\", \"signed off\", \"period\", \"vessel type\",\n    \"dwt\", \"grt\", \"engine type\", \"bh\", \"kw\", \"reason for sign off\",\n    \"passport number\", \"seaman book number\", \"relationship\", \"height cm\", \"weight kg\", \"ht\", \"wt\",\n    \"overall_size\", \"shirt_size\", \"shoes_size\", \"trouser_size\", \"nearest_port\", \"pob\", \"dob\",\n    \"other position\", \"other position if any\", \"register date\", \"last update date\", \"last up date data\",\n    \"application for position as\", \"position applied\"\n}",
+        "StartLine": 1182,
+        "TargetContent": "KNOWN_CV_LABELS = {\n    \"height\", \"weight\", \"place of birth\", \"marital status\", \"overall size\", \"shirt size\",\n    \"trouser size\", \"shoes size\", \"nearest port\", \"date of birth\", \"nationality\",\n    \"full name\", \"name\", \"email\", \"phone\", \"mobile\", \"address\", \"passport\",\n    \"seaman book\", \"college\", \"school\", \"marlins test\", \"english language\", \"german language\",\n    \"certificate name\", \"number\", \"issue date\", \"expiry date\", \"issued by\",\n    \"issued at\", \"flag state\", \"first dose\", \"second dose\", \"course name\", \"company name\",\n    \"rank\", \"vessel name\", \"flag\", \"signed on\", \"signed off\", \"period\", \"vessel type\",\n    \"dwt\", \"grt\", \"engine type\", \"bh\", \"kw\", \"reason for sign off\",\n    \"passport number\", \"seaman book number\", \"relationship\", \"height cm\", \"weight kg\", \"ht\", \"wt\",\n    \"overall_size\", \"shirt_size\", \"shoes_size\", \"trouser_size\", \"nearest_port\", \"pob\", \"dob\",\n}"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1330,
+        "ReplacementContent": "                # --- Case C: Table Cell is actually empty ---\n                # Check if the extracted cell content is exactly the label text\n                # This happens when PDF converts an empty table row into adjacent cells:\n                # E.g. [ \"Height Cm\", \"Height Cm\" ] instead of [ \"Height Cm\", \"\" ]\n                import re\n                c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())\n                l_clean = re.sub(r'[^a-z0-9]', '', label_lower)\n                if c_clean and l_clean and (c_clean == l_clean or c_clean in l_clean or l_clean in c_clean):\n                    if _is_valid_value(\"\", labels): return \"\"\n                    \n                # Strict length constraint for Nearest Port to avoid massive bleed over\n                if label_lower == \"nearest port\" and len(cell) > 40:\n                    return \"\"",
+        "StartLine": 1319,
+        "TargetContent": "                # --- Case C: Table Cell is actually empty ---\n                # Check if the extracted cell content is exactly the label text\n                # This happens when PDF converts an empty table row into adjacent cells:\n                # E.g. [ \"Height Cm\", \"Height Cm\" ] instead of [ \"Height Cm\", \"\" ]\n                import re\n                c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())\n                l_clean = re.sub(r'[^a-z0-9]', '', label_lower)\n                if c_clean == l_clean:\n                    if _is_valid_value(\"\", labels): return \"\""
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1442,
+        "ReplacementContent": "    # Explicitly find checkboxes near the words\n    import re\n    checked_match = re.search(r'\\[\\s*[xXvV\u2713\u2611\u2612]\\s*\\]|\u2612|\u2611|\u2713', ms_raw)\n    if checked_match:\n        x_idx = checked_match.start()\n        m_idx = ms_raw.lower().find(\"married\")\n        s_idx = ms_raw.lower().find(\"single\")\n        \n        if m_idx != -1 and s_idx != -1:\n            if abs(x_idx - m_idx) < abs(x_idx - s_idx):\n                is_married = True\n                is_single = False\n            else:\n                is_single = True\n                is_married = False\n        elif m_idx != -1:\n            is_married = True\n            is_single = False\n        elif s_idx != -1:\n            is_single = True\n            is_married = False\n    else:\n        if is_married and is_single:\n            is_married = False\n            is_single = False",
+        "StartLine": 1423,
+        "TargetContent": "    # Explicitly find checkboxes near the words\n    import re\n    checked_match = re.search(r'\\[\\s*[xXvV\u2713\u2611\u2612]\\s*\\]|\u2612|\u2611|\u2713', ms_raw)\n    if checked_match:\n        x_idx = checked_match.start()\n        m_idx = ms_raw.lower().find(\"married\")\n        s_idx = ms_raw.lower().find(\"single\")\n        \n        if m_idx != -1 and s_idx != -1:\n            if abs(x_idx - m_idx) < abs(x_idx - s_idx):\n                is_married = True\n                is_single = False\n            else:\n                is_single = True\n                is_married = False\n        elif m_idx != -1:\n            is_married = True\n            is_single = False\n        elif s_idx != -1:\n            is_single = True\n            is_married = False"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Updating document extraction",
+    "toolSummary": "Fix AI bugs"
+  },
+  {
+    "Description": "Remove inline imports that break local scoping",
+    "Instruction": "Remove `import re` inside `_is_valid_value`, `_field`, and `_extract_personal`.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1222,
+        "ReplacementContent": "    val_clean = re.sub(r'[^a-z0-9\\s]', '', val_lower).strip()",
+        "StartLine": 1221,
+        "TargetContent": "    import re\n    val_clean = re.sub(r'[^a-z0-9\\s]', '', val_lower).strip()"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1274,
+        "ReplacementContent": "                        c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())",
+        "StartLine": 1273,
+        "TargetContent": "                        import re\n                        c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())"
+      },
+      {
+        "AllowMultiple": false,
+        "EndLine": 1410,
+        "ReplacementContent": "    checked_match = re.search(r'\\[\\s*[xXvV\u2713\u2611\u2612]\\s*\\]|\u2612|\u2611|\u2713', ms_raw)",
+        "StartLine": 1409,
+        "TargetContent": "    import re\n    checked_match = re.search(r'\\[\\s*[xXvV\u2713\u2611\u2612]\\s*\\]|\u2612|\u2611|\u2713', ms_raw)"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Fixing document_to_json.py",
+    "toolSummary": "Fix inline import"
+  },
+  {
+    "Description": "Add phone labels to KNOWN_CV_LABELS so they don't bleed over into other fields",
+    "Instruction": "Add \"mobile / tel\", \"mobile/tel\", \"tel\", \"tel no\", \"phone no\", \"mobile no\" to KNOWN_CV_LABELS",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1203,
+        "ReplacementContent": "    \"overall_size\", \"shirt_size\", \"shoes_size\", \"trouser_size\", \"nearest_port\", \"pob\", \"dob\",\n    \"other position\", \"other position if any\", \"register date\", \"last update date\", \"last up date data\",\n    \"application for position as\", \"position applied\",\n    \"mobile / tel\", \"mobile/tel\", \"tel\", \"tel no\", \"phone no\", \"mobile no\", \"contact no\", \"contact number\", \"mobile number\"",
+        "StartLine": 1202,
+        "TargetContent": "    \"overall_size\", \"shirt_size\", \"shoes_size\", \"trouser_size\", \"nearest_port\", \"pob\", \"dob\",\n    \"other position\", \"other position if any\", \"register date\", \"last update date\", \"last up date data\",\n    \"application for position as\", \"position applied\""
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Updating CV Labels",
+    "toolSummary": "Add mobile labels"
+  },
+  {
+    "Description": "Improve _is_valid_value to reject values that start with a known CV label",
+    "Instruction": "Add a check in _is_valid_value to reject values that start with a known label.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1230,
+        "ReplacementContent": "    val_clean = re.sub(r'[^a-z0-9\\s]', '', val_lower).strip()\n    val_clean = re.sub(r'\\s+', ' ', val_clean)\n    if val_clean in KNOWN_CV_LABELS:\n        return False\n        \n    for lbl in KNOWN_CV_LABELS:\n        if val_lower.startswith(lbl + \" \") or val_lower.startswith(lbl + \":\") or val_lower.startswith(lbl + \"\\n\"):\n            return False",
+        "StartLine": 1226,
+        "TargetContent": "    val_clean = re.sub(r'[^a-z0-9\\s]', '', val_lower).strip()\n    val_clean = re.sub(r'\\s+', ' ', val_clean)\n    if val_clean in KNOWN_CV_LABELS:\n        return False"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Improving bleed over prevention",
+    "toolSummary": "Enhance value rejection"
+  },
+  {
+    "Description": "Improve _phone regex to handle spaces and ensure it returns only the digits and plus sign.",
+    "Instruction": "Update _phone regex patterns to handle spaces and dashes within the number, and clean the result.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1463,
+        "ReplacementContent": "def _phone(text: str) -> str:\n    \"\"\"Return the first phone number found, scrubbed to only digits/plus.\"\"\"\n    patterns = [\n        r\"\\+\\d{1,3}[\\s\\-]?\\d[\\d\\s\\-]{6,15}\",\n        r\"\\b0\\d[\\d\\s\\-]{8,15}\\b\",\n    ]\n    for p in patterns:\n        import re\n        m = re.search(p, text)\n        if m:\n            # Clean up the matched phone number to only contain + and digits\n            return re.sub(r'[^\\d\\+]', '', m.group(0))\n    return \"\"",
+        "StartLine": 1451,
+        "TargetContent": "def _phone(text: str) -> str:\n    \"\"\"Return the first phone number found.\"\"\"\n    patterns = [\n        r\"\\+\\d{1,3}[\\s\\-]?\\d[\\d\\s\\-]{6,15}\",\n        r\"\\b0\\d{9,11}\\b\",\n    ]\n    for p in patterns:\n        m = re.search(p, text)\n        if m:\n            return m.group(0).strip()\n    return \"\""
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Updating _phone regex",
+    "toolSummary": "Improve phone regex"
+  },
+  {
+    "Description": "Remove import re from _phone",
+    "Instruction": "Remove the `import re` inside `_phone`",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1366,
+        "ReplacementContent": "    for p in patterns:\n        m = re.search(p, text)",
+        "StartLine": 1365,
+        "TargetContent": "    for p in patterns:\n        import re\n        m = re.search(p, text)"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Cleaning up _phone",
+    "toolSummary": "Remove inline import"
+  },
+  {
+    "Description": "Fix corrupted regex characters",
+    "Instruction": "Fix the corrupted regex string in `_extract_personal`.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1416,
+        "ReplacementContent": "    checked_match = re.search(r'\\[\\s*[xXvV]\\s*\\]|\\[\\s*\u2713\\s*\\]', ms_raw)",
+        "StartLine": 1415,
+        "TargetContent": "    checked_match = re.search(r'\\[\\s*[xXvVo\"~\\'~\\']\\s*\\]|~\\'|~\\'|o\"', ms_raw)"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Fixing corrupted regex",
+    "toolSummary": "Fix regex string"
+  },
+  {
+    "Description": "Fix the empty cell logic so it actually returns empty instead of falling back to text.",
+    "Instruction": "Replace `if _is_valid_value(\"\", labels): return \"\"` with `return \"\"` in `Case C` inside `_field`.",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1159,
+        "ReplacementContent": "                        c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())\n                        l_clean = re.sub(r'[^a-z0-9]', '', label_lower)\n                        if c_clean and l_clean and (c_clean == l_clean or c_clean in l_clean or l_clean in c_clean):\n                            return \"\"",
+        "StartLine": 1156,
+        "TargetContent": "                        c_clean = re.sub(r'[^a-z0-9]', '', cell.lower())\n                        l_clean = re.sub(r'[^a-z0-9]', '', label_lower)\n                        if c_clean and l_clean and (c_clean == l_clean or c_clean in l_clean or l_clean in c_clean):\n                            if _is_valid_value(\"\", labels): return \"\""
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Fixing empty cell check",
+    "toolSummary": "Fix bleed over"
+  },
+  {
+    "AllowMultiple": false,
+    "Description": "Fix the corrupted regex string using precise line bounds to avoid mismatch.",
+    "EndLine": 1425,
+    "Instruction": "Fix the checkbox regex",
+    "ReplacementContent": "    # Explicitly find checkboxes near the words\n    checked_match = re.search(r'\\[\\s*[xXvV]\\s*\\]|\\[\\s*x\\s*\\]', ms_raw)",
+    "StartLine": 1424,
+    "TargetContent": "    # Explicitly find checkboxes near the words\n    checked_match = re.search(r'\\[\\s*[xXvV]\\s*\\]|\\[\\s*o\"\\s*\\]', ms_raw)",
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Fixing regex using replace_file_content",
+    "toolSummary": "Fix regex"
+  },
+  {
+    "Description": "Add LLM prompt for Personal Details",
+    "Instruction": "Add `_PersonalDetailsResult` and `_build_personal_details_prompt` before `_build_marine_courses_prompt`",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 1886,
+        "ReplacementContent": "    }\n\nclass _PersonalDetailsResult(BaseModel):\n    personal_details: PersonalDetails\n\ndef _build_personal_details_prompt(text: str) -> str:\n    \"\"\"Build a compact LLM prompt for Personal Details extraction.\"\"\"\n    target_text = text[:3000]\n    return f\"\"\"You are a maritime HR data extractor.\nExtract ALL personal details from the top of this seafarer CV.\nFocus on correctly associating data with labels, even if formatting is messy (e.g. empty checkboxes, misaligned table cells).\nCRITICAL: For Marital Status, carefully identify which checkbox or label is actually filled or checked (e.g., [x], [v], tick) versus which one is empty (e.g., [ ]).\nCRITICAL: Do not bleed unrelated fields together (e.g. do not put Passport info into Nearest Port, do not put Date of Birth into Height).\n\n--- CV TEXT ---\n{target_text}\n\"\"\"\n\ndef _build_marine_courses_prompt(text: str, table: list) -> str:",
+        "StartLine": 1885,
+        "TargetContent": "    }\n\n\ndef _build_marine_courses_prompt(text: str, table: list) -> str:"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Adding PersonalDetails LLM prompt",
+    "toolSummary": "Add LLM prompt"
+  },
+  {
+    "Description": "Add LLM pass 3 for Personal Details extraction",
+    "Instruction": "Add Pass 3 for `Personal Details` after Pass 2 in `convert_text_to_json`",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "EndLine": 2146,
+        "ReplacementContent": "        except Exception as exc:\n            logger.warning(f\"Sea service LLM pass failed: {exc}\\n{traceback.format_exc()}\")\n            print(\"[Stage 2 / Pass 2] Falling back to local regex for sea service.\")\n            \n        time.sleep(2)\n        \n        # -- Pass 3: Personal Details (Section 1) -----------------------------\n        print(\"[Stage 2 / Pass 3] LLM extraction - Personal Details (Section 1)...\")\n        try:\n            pd_prompt = _build_personal_details_prompt(text)\n            pd_result = _call_llm_with_retry(llm, pd_prompt, _PersonalDetailsResult)\n            if pd_result and pd_result.personal_details:\n                # Override the local extraction with the highly accurate LLM extraction\n                local_result[\"1_personal_details\"] = pd_result.personal_details.model_dump()\n                print(\"[Stage 2 / Pass 3] Extracted Personal Details via LLM successfully.\")\n            else:\n                print(\"[Stage 2 / Pass 3] LLM returned empty - keeping local results.\")\n        except Exception as exc:\n            logger.warning(f\"Personal details LLM pass failed: {exc}\\n{traceback.format_exc()}\")\n            print(\"[Stage 2 / Pass 3] Falling back to local regex for personal details.\")\n            \n    else:",
+        "StartLine": 2143,
+        "TargetContent": "        except Exception as exc:\n            logger.warning(f\"Sea service LLM pass failed: {exc}\\n{traceback.format_exc()}\")\n            print(\"[Stage 2 / Pass 2] Falling back to local regex for sea service.\")\n    else:"
+      }
+    ],
+    "TargetFile": "D:\\M SQUARE (MSQ)\\CODE SQUARE\\Sakr-Manning-Agency-Backend-main\\Sakr-Manning-Agency-Backend-main\\ai_document\\document_to_json.py",
+    "toolAction": "Adding Pass 3 LLM extraction",
+    "toolSummary": "Add Pass 3 LLM"
+  }
+]

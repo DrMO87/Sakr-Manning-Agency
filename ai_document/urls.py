@@ -75,11 +75,15 @@ from .views import (
     BatchConvertApplicantsView,
     SyncStatusView,
     SaveApplicantView,
+    CheckQuotaView,
 )
 
 urlpatterns = [
     # Main document upload endpoint - saves to both Applicant and Users models
     path("upload/", DocumentUploadView.as_view(), name="document-upload"),
+    
+    # Check true API Quota
+    path("check-quota/", CheckQuotaView.as_view(), name="check-quota"),
     
     # Save applicant from reviewed JSON
     path("save-applicant/", SaveApplicantView.as_view(), name="save-applicant"),

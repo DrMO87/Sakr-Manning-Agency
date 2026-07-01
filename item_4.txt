@@ -1,0 +1,13 @@
+I have successfully built and deployed this feature! 
+
+Here is what I did:
+1. **Backend LLM Update**: I updated the AI extraction schema (`_FullCVExtraction`) to include a `doubtful_checkboxes` list. The LLM is now instructed to specifically flag checkboxes (like `is_single` or `is_married`) if it is highly uncertain whether they are marked or not based on the document's visual formatting.
+2. **Backend API Update**: I mapped this new field so it correctly gets appended to the `doubted_fields` response that the frontend receives. 
+3. **Frontend UI Highlight**: I updated the `CompactCVEditForm` UI component. Now, any fields flagged as doubtful by the AI will be highlighted with a highly-visible **yellow/orange background border** and an explicit **"⚠️ Review"** badge next to the field name.
+
+You can try uploading a CV where the checkboxes are faint or ambiguous, and if the AI is uncertain, it will brightly highlight those toggles for manual review!
+
+---
+
+Shall we proceed with the next task from our backlog?
+> "add the ability to add interview in actions in applicants management table and make action buttons colored and shown as in users"

@@ -1,5 +1,7 @@
 // Overview.jsx - Tailwind & Enhancements Refactored
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "../Components/Cards/StatCard";
 import { ActivityItem } from "../Components/Cards/ActivityItem";
@@ -8,11 +10,12 @@ import { RecommendationCard } from "../Components/Cards/RecommendationCard";
 import LoadingScreen from "../Components/Common/LoadingScreen";
 import { COLORS } from "../Constants";
 import { ASSETS } from "../../../utils/constants";
-import { PlusCircle, Calendar, Building, FileText, CheckCircle2, LayoutDashboard, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { PlusCircle, Calendar, Building, FileText, CheckCircle2, LayoutDashboard, Clock, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 
 // Chart Components
 import { CVStatusChart } from "../Components/Charts/CVStatusChart";
 import { InterviewTrendChart } from "../Components/Charts/InterviewTrendChart";
+import { RegistrationTrendChart } from "../Components/Charts/RegistrationTrendChart";
 import { generateStatPdfReport } from "../../../utils/pdfReportGenerator";
 
 // Modals
@@ -46,6 +49,9 @@ const formatTimestamp = (dateString) => {
 
 export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
+
+  gsap.registerPlugin(useGSAP);
 
   const activityPageMap = {
     "New registration": "users",
@@ -219,6 +225,19 @@ export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
     return data;
   }, [interviews]);
 
+  const registrationTrendData = useMemo(() => {
+    const data = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateString = d.toISOString().split('T')[0];
+      const count = users?.filter(user => user.created_at?.startsWith(dateString)).length || 0;
+      data.push({ date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), count });
+    }
+    return data;
+  }, [users]);
+
   const recommendations = useMemo(() => {
     const items = [];
     const now = new Date();
@@ -243,6 +262,32 @@ export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
 
   const isLoading = usersLoading || companiesLoading || interviewsLoading || cvsLoading || documentsLoading;
 
+  useGSAP(() => {
+    if (isLoading) return;
+    
+    const tl = gsap.timeline();
+    
+    tl.fromTo(".overview-header", 
+      { opacity: 0, y: 20 }, 
+      { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
+    )
+    .fromTo(".overview-stat-card", 
+      { opacity: 0, scale: 0.9, y: 20 }, 
+      { opacity: 1, scale: 1, y: 0, duration: 0.4, stagger: 0.1, ease: "back.out(1.2)" },
+      "-=0.3"
+    )
+    .fromTo(".overview-chart-card", 
+      { opacity: 0, y: 30 }, 
+      { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+      "-=0.2"
+    )
+    .fromTo(".overview-bottom-section", 
+      { opacity: 0, y: 30 }, 
+      { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+      "-=0.2"
+    );
+  }, { scope: containerRef, dependencies: [isLoading] });
+
   if (isLoading) {
     return (
       <main className="flex-1 min-h-screen pt-[90px] px-6 lg:px-10 flex items-center justify-center">
@@ -255,8 +300,8 @@ export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
   let greeting = currentHour < 12 ? "Good Morning" : currentHour < 18 ? "Good Afternoon" : "Good Evening";
 
   return (
-    <main className="flex-1 min-w-0 min-h-screen pt-[90px] px-6 lg:px-10 pb-12 overflow-x-hidden">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-8">
+    <main ref={containerRef} className="flex-1 min-w-0 min-h-screen pt-[90px] px-6 lg:px-10 pb-12 overflow-x-hidden">
+      <div className="overview-header opacity-0 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-8">
         <div>
           <h2 className="text-3xl font-heading font-bold text-slate-900 dark:text-white tracking-tight mb-2">{greeting}, {user?.first_name || "Admin"}! 👋</h2>
           <p className="text-slate-500 dark:text-slate-400 font-sans">Here's what's happening with your agency today.</p>
@@ -271,26 +316,30 @@ export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
       <div className="mb-8">
         <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {statCards.map((card, idx) => (
-            <div key={idx} className="snap-start flex-shrink-0" title="Click to download PDF report">
+            <div key={idx} className="overview-stat-card opacity-0 snap-start flex-shrink-0" title="Click to download PDF report">
               <StatCard title={card.title} value={card.value} trend={card.trend} icon={card.icon} accentColor={card.accent} onClick={card.onClick} />
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white dark:bg-slate-900 rounded-[22px] p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="overview-chart-card opacity-0 bg-white dark:bg-slate-900 rounded-[22px] p-6 shadow-sm border border-slate-100 dark:border-slate-800">
           <h3 className="font-heading font-semibold text-lg text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2"><CheckCircle2 size={20} className="text-emerald-500" />CV Status Distribution</h3>
           <CVStatusChart data={statusBadges} />
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-[22px] p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="overview-chart-card opacity-0 bg-white dark:bg-slate-900 rounded-[22px] p-6 shadow-sm border border-slate-100 dark:border-slate-800">
           <h3 className="font-heading font-semibold text-lg text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2"><Calendar size={20} className="text-blue-500" />Interviews Over Time (14 Days)</h3>
           <InterviewTrendChart data={interviewTrendData} />
+        </div>
+        <div className="overview-chart-card opacity-0 bg-white dark:bg-slate-900 rounded-[22px] p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <h3 className="font-heading font-semibold text-lg text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2"><UserPlus size={20} className="text-violet-500" />Registrations Over Time (14 Days)</h3>
+          <RegistrationTrendChart data={registrationTrendData} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <section className="flex flex-col gap-8">
+        <section className="overview-bottom-section opacity-0 flex flex-col gap-8">
           <div className="flex-1 flex flex-col">
             <div className="flex items-center justify-between cursor-pointer mb-5 group" onClick={() => setIsNeedsAttentionOpen(!isNeedsAttentionOpen)}>
               <h2 className="font-heading font-semibold text-xl text-slate-800 dark:text-white flex items-center gap-2 m-0">
@@ -330,7 +379,7 @@ export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
           </div>
         </section>
 
-        <section className="flex flex-col">
+        <section className="overview-bottom-section opacity-0 flex flex-col">
           <div className="flex items-center justify-between cursor-pointer mb-5 group" onClick={() => setIsExpiringDocumentsOpen(!isExpiringDocumentsOpen)}>
             <h2 className="font-heading font-semibold text-xl text-slate-800 dark:text-white flex items-center gap-2 m-0">
               <FileWarning size={22} className="text-red-500" />
@@ -376,7 +425,7 @@ export const OverviewPage = ({ scale, isMobile, onNavigate, user }) => {
           )}
         </section>
 
-        <section className="flex flex-col">
+        <section className="overview-bottom-section opacity-0 flex flex-col">
           <div className="flex items-center justify-between cursor-pointer mb-5 group" onClick={() => setIsRecentActivityOpen(!isRecentActivityOpen)}>
             <h2 className="font-heading font-semibold text-xl text-slate-800 dark:text-white flex items-center gap-2 m-0">
               <LayoutDashboard size={22} className="text-blue-500" />

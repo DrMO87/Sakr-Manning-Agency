@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { BASE_WIDTH, COLORS, getScale } from "./Constants";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { Header } from "./Header";
 import { Sidebar, MobileSidebar } from "./Sidebar";
 import globalSearchApi from "../../services/Dashboard/globalSearchApi";
@@ -72,6 +74,30 @@ const DashboardAppContent = ({ onLogout, user }) => {
   const isInitialLoading = (loadingCompanies && (companies?.length ?? 0) === 0) ||
     (loadingUsers && (users?.length ?? 0) === 0) ||
     (loadingRanks && (ranks?.length ?? 0) === 0);
+
+  const appContainerRef = useRef(null);
+  gsap.registerPlugin(useGSAP);
+
+  useGSAP(() => {
+    // Only animate after initial data is loaded
+    if (isInitialLoading) return;
+    
+    const tl = gsap.timeline();
+    tl.fromTo(".dashboard-sidebar", 
+      { x: -200, opacity: 0 }, 
+      { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+    )
+    .fromTo(".dashboard-header", 
+      { y: -100, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+      "-=0.6"
+    )
+    .fromTo(".dashboard-main-content", 
+      { opacity: 0, y: 20 }, 
+      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+      "-=0.6"
+    );
+  }, { scope: appContainerRef, dependencies: [isInitialLoading] });
 
   const userData = user;
 
@@ -172,6 +198,7 @@ const DashboardAppContent = ({ onLogout, user }) => {
   return (
     <SearchProvider currentPage={currentPage}>
       <div 
+        ref={appContainerRef}
         className="flex overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300"
         style={{ 
           zoom: zoomLevel,
@@ -180,7 +207,7 @@ const DashboardAppContent = ({ onLogout, user }) => {
         }}
       >
         {/* Desktop Sidebar (Hidden on mobile) */}
-        <div className="hidden lg:block sticky top-0 flex-shrink-0 z-[110]" style={{ height: zoomLevel === 1 ? '100vh' : `calc(100vh / ${zoomLevel})` }}>
+        <div className="dashboard-sidebar hidden lg:block sticky top-0 flex-shrink-0 z-[110]" style={{ height: zoomLevel === 1 ? '100vh' : `calc(100vh / ${zoomLevel})` }}>
           <Sidebar
             currentPage={currentPage}
             onPageChange={handleNavigate}
@@ -204,21 +231,25 @@ const DashboardAppContent = ({ onLogout, user }) => {
           className="flex-1 flex flex-col transition-all duration-300 min-w-0 relative h-full overflow-hidden"
           style={{ zoom: zoomLevel }}
         >
-          <Header
-            pageTitle={pageData[currentPage] || "Dashboard"}
-            onMenuClick={() => setMobileMenuOpen(true)}
-            onLogout={onLogout}
-            onSearchSubmit={handleSearchSubmit}
-            onNavigate={handleNavigate}
-            user={userData}
-            zoomLevel={zoomLevel}
-            setZoomLevel={setZoomLevel}
-            isDarkMode={isDarkMode}
-            setIsDarkMode={setIsDarkMode}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            isSidebarCollapsed={isSidebarCollapsed}
-          />
-          {renderCurrentPage()}
+          <div className="dashboard-header w-full z-10 relative">
+            <Header
+              pageTitle={pageData[currentPage] || "Dashboard"}
+              onMenuClick={() => setMobileMenuOpen(true)}
+              onLogout={onLogout}
+              onSearchSubmit={handleSearchSubmit}
+              onNavigate={handleNavigate}
+              user={userData}
+              zoomLevel={zoomLevel}
+              setZoomLevel={setZoomLevel}
+              isDarkMode={isDarkMode}
+              setIsDarkMode={setIsDarkMode}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              isSidebarCollapsed={isSidebarCollapsed}
+            />
+          </div>
+          <div className="dashboard-main-content flex-1 overflow-auto w-full relative z-0">
+            {renderCurrentPage()}
+          </div>
         </div>
 
         <NotificationCenter scale={1} position="bottom-left" />

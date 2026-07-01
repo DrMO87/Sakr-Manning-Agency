@@ -225,6 +225,86 @@ class UserViewSet(viewsets.ModelViewSet):
         # Employee can only see themselves
         return Users.objects.filter(id=user.id)
 
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        user_ids = request.data.get('ids', [])
+        if not user_ids:
+            return Response({'error': 'No ids provided'}, status=400)
+        
+        if request.user.role not in ['Admin', 'HR Manager']:
+            return Response({'error': 'Permission denied'}, status=403)
+            
+        Users.objects.filter(id__in=user_ids).delete()
+        return Response({'message': f'Successfully deleted {len(user_ids)} users'})
+
+    @action(detail=False, methods=['post'], url_path='bulk-edit')
+    def bulk_edit(self, request):
+        user_ids = request.data.get('ids', [])
+        update_data = request.data.get('data', {})
+        if not user_ids:
+            return Response({'error': 'No ids provided'}, status=400)
+            
+        if request.user.role not in ['Admin', 'HR Manager']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        allowed_fields = ['user_status', 'role', 'status', 'is_active', 'is_blacklisted']
+        clean_data = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        # Handle rank assignment separately if provided
+        rank_position = update_data.get('rank')
+        
+        if not clean_data and not rank_position:
+            return Response({'error': 'No valid fields provided for update'}, status=400)
+
+        users_to_update = Users.objects.filter(id__in=user_ids)
+        
+        if clean_data:
+            users_to_update.update(**clean_data)
+            
+        if rank_position:
+            # Replicate the logic from assign_rank_by_position
+            from companies.models import JobOrderPosition
+            try:
+                # In assign_rank_by_position we look up Rank or create it
+                # The user provides a position name like "Master"
+                from api.models import Rank, UserRank
+                
+                # Fetch position short code from JobOrderPosition if possible, else use first 3 chars
+                position_obj = JobOrderPosition.objects.filter(title__iexact=rank_position).first()
+                if position_obj and position_obj.rank_code:
+                    short_code = position_obj.rank_code
+                else:
+                    short_code = rank_position[:3].upper()
+                
+                rank, created = Rank.objects.get_or_create(
+                    name=rank_position,
+                    defaults={'code': short_code}
+                )
+                
+                for user in users_to_update:
+                    prefix = rank.code.split('.')[0] if '.' in rank.code else rank.code
+                    last_ur = UserRank.objects.filter(rank__code__startswith=prefix).order_by('-assigned_code').first()
+                    
+                    next_num = 1
+                    if last_ur and last_ur.assigned_code:
+                        try:
+                            last_num = int(last_ur.assigned_code.split('.')[-1])
+                            next_num = last_num + 1
+                        except (ValueError, IndexError):
+                            pass
+                    
+                    new_assigned_code = f"{prefix}.{next_num:03d}"
+                    UserRank.objects.create(
+                        user=user,
+                        rank=rank,
+                        assigned_code=new_assigned_code
+                    )
+            except Exception as e:
+                # Log error but don't fail the whole bulk edit if basic fields were updated
+                print("Bulk Rank Update Error:", e)
+
+        return Response({'message': f'Successfully updated {len(user_ids)} users'})
+
     @action(detail=False, methods=["get"], url_path="me")
     def me(self, request):
         serializer = UserMeSerializer(request.user)
@@ -1298,7 +1378,32 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        return Document.objects.all()
+        queryset = Document.objects.all()
+        
+        # Handle query parameters for filtering
+        status = self.request.query_params.getlist('status')
+        name = self.request.query_params.get('name')
+        email = self.request.query_params.get('email')
+        position = self.request.query_params.get('position')
+        search = self.request.query_params.get('search')
+        
+        if status:
+            queryset = queryset.filter(status__in=status)
+            
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+            
+        if email:
+            queryset = queryset.filter(email__icontains=email)
+            
+        if position:
+            queryset = queryset.filter(position__icontains=position)
+            
+        if search:
+            from django.db.models import Q
+            queryset = queryset.filter(Q(name__icontains=search) | Q(email__icontains=search))
+            
+        return queryset
 
     def perform_create(self, serializer):
         user_id = self.request.data.get('user')

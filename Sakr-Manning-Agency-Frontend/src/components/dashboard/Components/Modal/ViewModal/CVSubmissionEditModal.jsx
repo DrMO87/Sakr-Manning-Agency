@@ -6,6 +6,7 @@ import { useReferenceData } from "../../../../../hooks/useReferenceData";
 import { ReferenceDataProvider } from "../../../../../context/ReferenceDataContext";
 import { FormSaveProvider } from "../../../../../context/FormSaveContext";
 import { ToastProvider, useToast } from "../../../../../context/ToastContext";
+import { useAuthContext } from "../../../../../context/AuthContext";
 import api from "../../../../../services/Auth/api";
 import userService from "../../../../../services/Form/userService";
 import { cvSubmissionsApi } from "../../../../../services/Dashboard/cvSubmissionsApi";
@@ -101,6 +102,7 @@ const AccordionSection = ({ title, icon: Icon, colorTheme = "blue", children, de
 // AdminAttachmentsSection extracted
 
 export function CVSubmissionEditModal(props) {
+  if (!props.isOpen) return null;
   return (
     <ToastProvider>
       <CVSubmissionEditModalInner {...props} />
@@ -112,6 +114,8 @@ function CVSubmissionEditModalInner({ isOpen, onClose, submission }) {
 
   const [isUpdating, setIsUpdating] = useState(false);
   const { notify } = useToast();
+  const { user: currentUser } = useAuthContext();
+  const isAdminOrHR = currentUser?.role === "Admin" || currentUser?.role === "HR";
 
   const userId = useMemo(() => {
     return typeof submission?.user === 'object' ? submission?.user?.id : submission?.user;
@@ -362,23 +366,27 @@ function CVSubmissionEditModalInner({ isOpen, onClose, submission }) {
               </button>
             )}
 
-            <button
-              onClick={() => setShowPipelineModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 rounded-xl transition-colors shadow-sm font-medium text-sm"
-              title="Principal Placement"
-            >
-              <CheckCircle className="w-4 h-4" />
-              Principal Placement
-            </button>
+            {isAdminOrHR && (
+              <button
+                onClick={() => setShowPipelineModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300 rounded-xl transition-colors shadow-sm font-medium text-sm"
+                title="Principal Placement"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Principal Placement
+              </button>
+            )}
 
-            <button
-              onClick={() => setShowGenerateContract(true)}
-              className="flex items-center gap-2 px-4 py-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-300 rounded-xl transition-colors shadow-sm font-medium text-sm"
-              title="Contract Setup"
-            >
-              <FileText className="w-4 h-4" />
-              Contract Setup
-            </button>
+            {isAdminOrHR && (
+              <button
+                onClick={() => setShowGenerateContract(true)}
+                className="flex items-center gap-2 px-4 py-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-300 rounded-xl transition-colors shadow-sm font-medium text-sm"
+                title="Contract Setup"
+              >
+                <FileText className="w-4 h-4" />
+                Contract Setup
+              </button>
+            )}
 
 
             <button
@@ -466,9 +474,11 @@ function CVSubmissionEditModalInner({ isOpen, onClose, submission }) {
                       <ReferencesForm />
                     </AccordionSection>
 
-                    <AccordionSection title="Admin Related Attachments" icon={ShieldCheck} colorTheme="orange" defaultOpen>
-                      <AdminAttachmentsSection userId={userId} />
-                    </AccordionSection>
+                    {isAdminOrHR && (
+                      <AccordionSection title="Admin Related Attachments" icon={ShieldCheck} colorTheme="orange" defaultOpen>
+                        <AdminAttachmentsSection userId={userId} />
+                      </AccordionSection>
+                    )}
                   </div>
                 </FormSaveProvider>
               </FormProvider>

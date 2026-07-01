@@ -188,6 +188,68 @@ export const useUsers = () => {
   );
 
   /**
+   * Bulk Delete users (Admin only)
+   */
+  const bulkDeleteUsers = useCallback(
+    async (userIds) => {
+      if (!canDelete) {
+        notify.error("You do not have permission to delete users");
+        return { success: false, error: "Permission denied" };
+      }
+
+      setLoading(true);
+
+      try {
+        await usersApi.bulkDeleteUsers(userIds);
+
+        // Refresh global context cache and local
+        await refreshGlobalUsers(true);
+        await fetchUsers({ page: pagination.currentPage });
+        notify.success(`Successfully deleted ${userIds.length} users`);
+        return { success: true };
+      } catch (err) {
+        const errorMessage = err.message || "Failed to delete users";
+        notify.error(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [canDelete, notify, fetchUsers, pagination.currentPage, refreshGlobalUsers]
+  );
+
+  /**
+   * Bulk Update users (Admin only)
+   */
+  const bulkUpdateUsers = useCallback(
+    async (userIds, data) => {
+      if (!canEdit) {
+        notify.error("You do not have permission to edit users");
+        return { success: false, error: "Permission denied" };
+      }
+
+      setLoading(true);
+
+      try {
+        await usersApi.bulkUpdateUsers(userIds, data);
+
+        // Refresh global context cache and local
+        await refreshGlobalUsers(true);
+        await fetchUsers({ page: pagination.currentPage });
+        notify.success(`Successfully updated ${userIds.length} users`);
+        return { success: true };
+      } catch (err) {
+        const errorMessage = err.message || "Failed to update users";
+        notify.error(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [canEdit, notify, fetchUsers, pagination.currentPage, refreshGlobalUsers]
+  );
+
+  /**
    * Get user statistics
    */
   const fetchUserStats = useCallback(async () => {
@@ -276,6 +338,8 @@ export const useUsers = () => {
     createUser,
     updateUser,
     deleteUser,
+    bulkDeleteUsers,
+    bulkUpdateUsers,
     fetchUserStats,
     getUserStatusCounts,
     refreshUsers,

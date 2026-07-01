@@ -14,6 +14,12 @@ export const useCVDocuments = () => {
     currentPage: 1,
     pageSize: 50,
   });
+  const [stats, setStats] = useState({
+    total_applications: 0,
+    pending_applications: 0,
+    active_applications: 0,
+    blacklist_applications: 0,
+  });
 
   const { notify } = useNotification();
 
@@ -51,6 +57,19 @@ export const useCVDocuments = () => {
     },
     [notify]
   );
+  /**
+   * Fetch global document statistics
+   */
+  const fetchDocumentStats = useCallback(async () => {
+    try {
+      const data = await cvSubmissionsApi.getDocumentStats();
+      setStats(data);
+      return { success: true, data };
+    } catch (err) {
+      console.error(err);
+      return { success: false };
+    }
+  }, []);
 
   /**
    * Change document status (Pending → Active → Blacklist)
@@ -63,6 +82,7 @@ export const useCVDocuments = () => {
         setDocuments((prev) =>
           prev.map((d) => (d.id === id ? { ...d, ...updated } : d))
         );
+        fetchDocumentStats();
         return { success: true, data: updated };
       } catch (err) {
         const msg = err.message || "Failed to update status";
@@ -70,7 +90,7 @@ export const useCVDocuments = () => {
         return { success: false, error: msg };
       }
     },
-    [notify]
+    [notify, fetchDocumentStats]
   );
 
   /**
@@ -107,6 +127,7 @@ export const useCVDocuments = () => {
         const result = await cvSubmissionsApi.createDocument(formData);
         // Refresh documents to include new entry
         await fetchDocuments({ page: 1 });
+        fetchDocumentStats();
         return { success: true, data: result };
       } catch (err) {
         const msg = err.message || "Failed to create CV";
@@ -116,7 +137,7 @@ export const useCVDocuments = () => {
         setLoading(false);
       }
     },
-    [fetchDocuments, notify]
+    [fetchDocuments, notify, fetchDocumentStats]
   );
 
   /**
@@ -133,6 +154,7 @@ export const useCVDocuments = () => {
         setDocuments((prev) =>
           prev.map((d) => (d.id === id ? { ...d, ...updated } : d))
         );
+        fetchDocumentStats();
         return { success: true, data: updated };
       } catch (err) {
         const msg = err.message || "Failed to update CV";
@@ -142,7 +164,7 @@ export const useCVDocuments = () => {
         setLoading(false);
       }
     },
-    [notify]
+    [notify, fetchDocumentStats]
   );
 
   /**
@@ -154,6 +176,7 @@ export const useCVDocuments = () => {
         await cvSubmissionsApi.deleteDocument(id);
         setDocuments((prev) => prev.filter((d) => d.id !== id));
         setPagination((prev) => ({ ...prev, count: prev.count - 1 }));
+        fetchDocumentStats();
         return { success: true };
       } catch (err) {
         const msg = err.message || "Failed to delete CV";
@@ -161,14 +184,16 @@ export const useCVDocuments = () => {
         return { success: false, error: msg };
       }
     },
-    [notify]
+    [notify, fetchDocumentStats]
   );
 
   return {
     documents,
+    stats,
     loading,
     pagination,
     fetchDocuments,
+    fetchDocumentStats,
     setDocumentStatus,
     downloadDocument,
     createDocument,

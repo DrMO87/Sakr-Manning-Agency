@@ -3,11 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { LayoutDashboard } from "lucide-react";
 import { ASSETS } from "../../../utils/constants";
 import { getMediaUrl } from "../../../utils/fileHelpers";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const Header = ({ onNavigate, onOpenAuth, user, onLogout, currentPage, onOpenForm }) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [active, setActive] = useState("home");
+  const headerRef = React.useRef(null);
+
+  gsap.registerPlugin(useGSAP);
+
+  useGSAP(() => {
+    gsap.fromTo(headerRef.current, 
+      { y: -100, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 1, ease: "power3.out" }
+    );
+  }, { scope: headerRef });
 
   const isAdmin = ["admin", "administrator"].includes(user?.role?.toLowerCase());
 
@@ -24,7 +36,7 @@ const Header = ({ onNavigate, onOpenAuth, user, onLogout, currentPage, onOpenFor
   };
 
   return (
-    <header className="w-full sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-300">
+    <header ref={headerRef} className="w-full sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-300">
       <div className="max-w-[1920px] h-20 sm:h-24 md:h-24 lg:h-24 xl:h-28 mx-auto flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-12 2xl:px-20">
         {/* Logo */}
         <div

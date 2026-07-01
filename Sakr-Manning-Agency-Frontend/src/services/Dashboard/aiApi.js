@@ -41,15 +41,16 @@ export const aiApi = {
   /**
    * Upload and process document (PDF/DOCX) with AI
    * @param {File} file - Document file
+   * @param {Object} aiApiKeys - Object containing groq array and gemini key
    * @returns {Promise<Object>} Processed result
    */
-  uploadDocument: async (file, groqApiKey = null) => {
+  uploadDocument: async (file, aiApiKeys = null) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("save_to_db", "false"); // Just extract data, do not save
-      if (groqApiKey) {
-        formData.append("groq_api_key", groqApiKey);
+      if (aiApiKeys) {
+        formData.append("api_keys_config", JSON.stringify(aiApiKeys));
       }
 
       const response = await aiApiInstance.post("/ai/upload/", formData, {
@@ -63,9 +64,14 @@ export const aiApi = {
       };
     } catch (error) {
       console.error("Failed to upload document:", error);
+      if (error.response) {
+        console.error("Server 400 error data:", error.response.data);
+      }
+      // Pass the raw error object so the caller can inspect response.data
       return {
         success: false,
         error: handleApiError(error),
+        rawError: error
       };
     }
   },
@@ -104,14 +110,16 @@ export const aiApi = {
    * Send message to AI chat agent
    * @param {string} message - User message
    * @param {string} sessionId - Optional session ID
+   * @param {Object} aiApiKeys - Optional API keys object
    * @returns {Promise<Object>}
    */
-  sendChatMessage: async (message, sessionId = null, groqApiKey = null) => {
+  sendChatMessage: async (message, sessionId = null, aiApiKeys = null) => {
     try {
       const response = await aiApiInstance.post("/ai-agents/chat/", {
         message,
         session_id: sessionId,
-        groq_api_key: groqApiKey,
+        api_keys_config: typeof aiApiKeys === 'string' ? null : aiApiKeys,
+        groq_api_key: typeof aiApiKeys === 'string' ? aiApiKeys : null, // Fallback for legacy
       });
 
       return {
@@ -123,6 +131,7 @@ export const aiApi = {
       return {
         success: false,
         error: handleApiError(error),
+        rawError: error
       };
     }
   },
@@ -169,6 +178,25 @@ export const aiApi = {
         error: handleApiError(error),
         data: [],
       };
+    }
+  },
+
+  /**
+   * Check exact API Quota
+   * @param {Object} aiApiKeys - The AI API Keys configuration
+   * @returns {Promise<Object>} The API response with quota data
+   */
+  checkQuota: async (aiApiKeys) => {
+    try {
+      const response = await aiApiInstance.post("/ai/check-quota/", {
+        api_keys_config: JSON.stringify(aiApiKeys),
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return handleApiError(error);
     }
   },
 };

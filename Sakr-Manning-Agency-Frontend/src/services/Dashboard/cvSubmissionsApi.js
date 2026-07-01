@@ -39,7 +39,13 @@ export const cvSubmissionsApi = {
             if (filters.page)   params.append("page",   filters.page);
             if (filters.name)   params.append("name",   filters.name);
             if (filters.email)  params.append("email",  filters.email);
-            if (filters.status) params.append("status", filters.status);
+            if (filters.status) {
+                if (Array.isArray(filters.status)) {
+                    filters.status.forEach(s => params.append("status", s));
+                } else {
+                    params.append("status", filters.status);
+                }
+            }
             // Legacy fallback: if caller still passes generic `search`
             if (filters.search && !filters.name && !filters.email) {
                 params.append("search", filters.search);
@@ -119,6 +125,25 @@ export const cvSubmissionsApi = {
         }
     },
 
+    /**
+     * Get document statistics (Section 2 counts)
+     */
+    getDocumentStats: async () => {
+        try {
+            const endpoint = `${config.ENDPOINTS.DOCUMENTS}stats/`;
+            const response = await api.get(endpoint);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to fetch document stats:", error);
+            return {
+                total_applications: 0,
+                pending_applications: 0,
+                active_applications: 0,
+                blacklist_applications: 0
+            };
+        }
+    },
+
 
     // =========================================================================
     // SECTION 4: CV SUBMISSIONS (Recruitment Pipeline)
@@ -133,7 +158,13 @@ export const cvSubmissionsApi = {
             const params = new URLSearchParams();
             if (filters.page)   params.append("page",   filters.page);
             if (filters.page_size) params.append("page_size", filters.page_size);
-            if (filters.status) params.append("status", filters.status);
+            if (filters.status) {
+                if (Array.isArray(filters.status)) {
+                    filters.status.forEach(s => params.append("status", s));
+                } else {
+                    params.append("status", filters.status);
+                }
+            }
             if (filters.user)   params.append("user",   filters.user);
             if (filters.position) params.append("position", filters.position);
             if (filters.submitted_date_from) params.append("submitted_date_from", filters.submitted_date_from);

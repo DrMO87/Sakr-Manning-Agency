@@ -5,6 +5,9 @@ import Card from "../../common/Card";
 import ImageBlock from "../../common/ImageBlock";
 import { ASSETS } from "../../../utils/constants";
 import { motion } from "framer-motion";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "../../../styles/globals.css";
 import { useNavigate } from "react-router-dom";
 import { jobOrdersApi } from "../../../services/Dashboard/jobOrdersApi";
@@ -25,6 +28,71 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
+  const containerRef = useRef(null);
+
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+  // Hero Section Animation
+  useGSAP(() => {
+    if (!heroImageLoaded) return;
+    
+    const tl = gsap.timeline();
+    
+    // Animate the image scale
+    gsap.fromTo(".hero-bg-container img", 
+      { scale: 1.15, filter: "brightness(0.7)" }, 
+      { scale: 1, filter: "brightness(1)", duration: 2.5, ease: "power2.out" }
+    );
+    
+    tl.fromTo(".hero-title", 
+      { opacity: 0, y: 60 }, 
+      { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }
+    )
+    .fromTo(".hero-subtitle", 
+      { opacity: 0, y: 40 }, 
+      { opacity: 1, y: 0, duration: 1, ease: "power2.out" },
+      "-=0.8"
+    )
+    .fromTo(".hero-cta", 
+      { opacity: 0, scale: 0.8 }, 
+      { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.5)" },
+      "-=0.6"
+    )
+    .fromTo(".hero-tag", 
+      { opacity: 0, y: 20, scale: 0.9 }, 
+      { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.1, ease: "back.out(1.2)" },
+      "-=0.4"
+    );
+  }, { scope: containerRef, dependencies: [heroImageLoaded] });
+
+  // ScrollTrigger Animations
+  useGSAP(() => {
+    // About Section
+    gsap.fromTo(".about-image", 
+      { x: -80, opacity: 0 }, 
+      { x: 0, opacity: 1, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: ".about-section", start: "top 75%" } }
+    );
+    gsap.fromTo(".about-text", 
+      { x: 80, opacity: 0 }, 
+      { x: 0, opacity: 1, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: ".about-section", start: "top 75%" } }
+    );
+
+    // Services Grid
+    gsap.fromTo(".service-card", 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "back.out(1.2)", scrollTrigger: { trigger: ".services-section", start: "top 80%" } }
+    );
+
+    // CTA Banner decorative circle pulsing
+    gsap.to(".cta-bg-circle", {
+      scale: 1.5,
+      opacity: 0.4,
+      duration: 3,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+  }, { scope: containerRef });
 
   // ── Live vacancies state ─────────────────────────────────────────────────
   const [jobs, setJobs] = useState(FALLBACK_JOBS);
@@ -134,14 +202,14 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
         margin="none"
         className="w-full h-[70vh] sm:h-[80vh] lg:h-[85vh] 2xl:h-[90vh] overflow-hidden rounded-none md:rounded-3xl 2xl:rounded-none relative mx-0 2xl:mx-0"
       >
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full" ref={containerRef}>
           <ImageBlock
             src={ASSETS.HOME_IMAGES[0]}
             alt="Hero Background"
             aspectRatio="auto"
             objectFit="cover"
             rounded="none"
-            className="w-full h-full"
+            className="w-full h-full hero-bg-container"
             onLoad={handleHeroImageLoad}
             onError={handleHeroImageError}
             loading="eager"
@@ -150,29 +218,19 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
                 <div className="relative w-full h-full flex flex-col justify-center">
                   {/* Hero Text - RESPONSIVE */}
                   <div className="flex flex-col items-center justify-center px-4 sm:px-6 md:px-12 lg:px-24 text-center h-full w-full">
-                    <motion.h1
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                      className="font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-tight text-white mb-4 sm:mb-6 drop-shadow-lg"
+                    <h1
+                      className="hero-title font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-tight text-white mb-4 sm:mb-6 drop-shadow-lg opacity-0"
                     >
                       Welcome To Sakr Manning Agency
-                    </motion.h1>
+                    </h1>
 
-                    <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-                      className="font-medium text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl leading-tight text-blue-100 mb-8 sm:mb-10 drop-shadow-md max-w-4xl"
+                    <p
+                      className="hero-subtitle font-medium text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl leading-tight text-blue-100 mb-8 sm:mb-10 drop-shadow-md max-w-4xl opacity-0"
                     >
                       For Recruiting Egyptian Labor Abroad
-                    </motion.p>
+                    </p>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
-                    >
+                    <div className="hero-cta opacity-0">
                       <button
                         onClick={() => {
                           const element = document.getElementById('vacancies');
@@ -182,7 +240,7 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
                       >
                         Explore Opportunities
                       </button>
-                    </motion.div>
+                    </div>
                   </div>
 
                   {/* Services Tags - RESPONSIVE with horizontal scroll on mobile */}
@@ -195,15 +253,12 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
                           "Crewing system",
                           "Health insurance",
                         ].map((service, index) => (
-                          <motion.span
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 + (index * 0.1) }}
+                          <span
                             key={index}
-                            className="text-xs sm:text-sm md:text-base lg:text-lg font-medium text-white/90 whitespace-nowrap bg-white/10 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-full border border-white/20 shadow-lg"
+                            className="hero-tag opacity-0 text-xs sm:text-sm md:text-base lg:text-lg font-medium text-white/90 whitespace-nowrap bg-white/10 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-full border border-white/20 shadow-lg"
                           >
                             {service}
-                          </motion.span>
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -223,15 +278,11 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
         background="default"
         padding="lg"
         margin="none"
-        className="container mx-auto w-full max-w-7xl 2xl:max-w-[1600px] flex flex-col lg:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-20 2xl:gap-24"
+        className="about-section container mx-auto w-full max-w-7xl 2xl:max-w-[1600px] flex flex-col lg:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-20 2xl:gap-24"
       >
         {/* About Image with decorative elements */}
-        <motion.div
-          className="w-full lg:w-1/2 relative"
-          initial={{ x: -100, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ once: true }}
+        <div
+          className="about-image opacity-0 w-full lg:w-1/2 relative"
         >
           <div className="absolute -inset-4 bg-gradient-to-tr from-blue-100 to-transparent rounded-[3rem] -z-10 transform -rotate-3 scale-105 opacity-70"></div>
           <ImageBlock
@@ -241,15 +292,11 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
             aspectRatio="square"
             loading="lazy"
           />
-        </motion.div>
+        </div>
 
         {/* About Content */}
-        <motion.div
-          className="w-full lg:w-1/2 space-y-6 md:space-y-8 px-4 lg:px-0"
-          initial={{ x: 100, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ once: true }}
+        <div
+          className="about-text opacity-0 w-full lg:w-1/2 space-y-6 md:space-y-8 px-4 lg:px-0"
         >
           <div>
             <h2 className="font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-slate-900 mb-6">
@@ -285,7 +332,7 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
               </svg>
             </button>
           </div>
-        </motion.div>
+        </div>
       </Section>
 
       {/* Services Section - Redesigned Grid */}
@@ -293,7 +340,7 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
         layout="centered"
         background="default"
         padding="lg"
-        className="relative bg-slate-50 w-full"
+        className="services-section relative bg-slate-50 w-full"
       >
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
@@ -316,13 +363,9 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
             ].map((service, idx) => {
               const Icon = service.icon;
               return (
-                <motion.div
+                <div
                   key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                  className="bg-white rounded-[22px] p-6 shadow-sm border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col items-start"
+                  className="service-card opacity-0 bg-white rounded-[22px] p-6 shadow-sm border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col items-start"
                 >
                   <div className="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                     <Icon strokeWidth={1.5} size={28} />
@@ -333,7 +376,7 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
                   <p className="text-slate-500 font-medium leading-relaxed">
                     {service.desc}
                   </p>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -464,7 +507,7 @@ const HomePage = ({ user, onOpenForm, onNavigate }) => {
       >
         <div className="w-full max-w-7xl bg-gradient-to-r from-slate-900 to-blue-900 rounded-[2rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 py-10 sm:py-12 px-8 sm:px-12 lg:px-16 overflow-hidden relative">
           {/* Decorative background circle */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+          <div className="cta-bg-circle absolute -top-24 -right-24 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
           
           <div className="flex-1 z-10 text-center md:text-left">
             <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-4">

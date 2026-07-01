@@ -116,6 +116,50 @@ class UserSerializer(serializers.ModelSerializer):
             representation['role'] = 'Admin'
         return representation
 
+    def validate(self, attrs):
+        from datetime import date
+        today = date.today()
+
+        # Validate date of birth
+        if 'date_of_birth' in attrs and attrs['date_of_birth']:
+            dob = attrs['date_of_birth']
+            if dob > today:
+                raise serializers.ValidationError({"date_of_birth": "Birth date cannot be in the future"})
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            if age < 18:
+                raise serializers.ValidationError({"date_of_birth": "Applicant must be at least 18 years old"})
+
+        # Validate available date
+        if 'available_date' in attrs and attrs['available_date']:
+            if attrs['available_date'] < today:
+                raise serializers.ValidationError({"available_date": "Available date cannot be in the past"})
+
+        # Validate Height
+        if 'Height_Cm' in attrs and attrs['Height_Cm']:
+            h = attrs['Height_Cm']
+            if not (140 <= h <= 220):
+                raise serializers.ValidationError({"Height_Cm": "Height must be between 140 and 220 cm"})
+
+        # Validate Weight
+        if 'Weight_Kg' in attrs and attrs['Weight_Kg']:
+            w = attrs['Weight_Kg']
+            if not (40 <= w <= 160):
+                raise serializers.ValidationError({"Weight_Kg": "Weight must be between 40 and 160 kg"})
+
+        # Validate Passport Expiry
+        if 'passport_issue_date' in attrs and attrs['passport_issue_date']:
+            if attrs['passport_issue_date'] > today:
+                raise serializers.ValidationError({"passport_issue_date": "Passport issue date cannot be in the future"})
+
+        if 'passport_expiry_date' in attrs and attrs['passport_expiry_date']:
+            if attrs['passport_expiry_date'] <= today:
+                raise serializers.ValidationError({"passport_expiry_date": "Passport has expired"})
+            if 'passport_issue_date' in attrs and attrs['passport_issue_date']:
+                if attrs['passport_expiry_date'] <= attrs['passport_issue_date']:
+                    raise serializers.ValidationError({"passport_expiry_date": "Passport expiry must be after issue date"})
+
+        return attrs
+
     def get_is_online(self, obj):
         # Check cache for user activity
         # Key matches what we set in middleware

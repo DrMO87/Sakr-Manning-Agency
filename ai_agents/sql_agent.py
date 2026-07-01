@@ -35,6 +35,9 @@ _local = threading.local()
 
 def get_current_model():
     groq_api_key = getattr(_local, "groq_api_key", None)
+    if not groq_api_key:
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        
     if groq_api_key:
         try:
             from langchain_groq import ChatGroq
@@ -42,15 +45,34 @@ def get_current_model():
         except ImportError:
             logger.error("langchain-groq not installed. Falling back to Gemini.")
     
+    google_api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "missing_key_please_add_to_env")
     return ChatGoogleGenerativeAI(
         model="gemini-3.1-flash-lite", 
-        google_api_key=os.environ.get("GOOGLE_API_KEY", "missing_key_please_add_to_env"),
+        google_api_key=google_api_key,
         safety_settings=safety_settings
     )
 
 class ModelProxy:
     def invoke(self, *args, **kwargs):
-        return get_current_model().invoke(*args, **kwargs)
+        response = get_current_model().invoke(*args, **kwargs)
+        if hasattr(_local, "api_keys_config") and isinstance(_local.api_keys_config, dict):
+            try:
+                usage = None
+                if hasattr(response, 'response_metadata'):
+                    usage = response.response_metadata.get("token_usage", {})
+                if usage:
+                    total_tokens = 0
+                    if isinstance(usage, dict):
+                        total_tokens = usage.get("total_tokens", 0)
+                    elif hasattr(usage, 'total_tokens'):
+                        total_tokens = usage.total_tokens
+                    if total_tokens > 0:
+                        provider = "groq" if getattr(_local, "groq_api_key", None) else "gemini"
+                        token_key = f"{provider}_tokens"
+                        _local.api_keys_config[token_key] = _local.api_keys_config.get(token_key, 0) + total_tokens
+            except Exception as e:
+                logger.error(f"Error tracking tokens: {e}")
+        return response
 
 model = ModelProxy()
 
@@ -671,13 +693,20 @@ def summarize_results(user_question: str, sql_results: dict) -> str:
 # MAIN ENTRYPOINT
 # ─────────────────────────────────────────────────────────────────────
 
-def process_database_question(user_question: str, groq_api_key: str = None) -> str:
+def process_database_question(user_question: str, groq_api_key: str = None, api_keys_config: dict = None) -> tuple:
     """
     Main entrypoint — routes to either:
     1. Full-profile lookup (for questions about specific applicants)
     2. Text-to-SQL RAG (for aggregate/general database questions)
     """
+    if api_keys_config and isinstance(api_keys_config, dict) and api_keys_config.get("groq"):
+        for k in api_keys_config.get("groq", []):
+            if k.get("status") == "live" and k.get("key"):
+                groq_api_key = k["key"]
+                break
+                
     _local.groq_api_key = groq_api_key
+    _local.api_keys_config = api_keys_config
     
     import re
     email_match = re.search(r'[\w\.-]+@[\w\.-]+', user_question)
@@ -691,11 +720,13 @@ def process_database_question(user_question: str, groq_api_key: str = None) -> s
         logger.info(f"Intent detected: {intent} for question: {user_question}")
 
     if intent == "applicant_lookup":
-        return _handle_applicant_lookup(user_question)
+        res = _handle_applicant_lookup(user_question)
     elif intent == "monthly_stats":
-        return _handle_monthly_stats(user_question)
+        res = _handle_monthly_stats(user_question)
     else:
-        return _handle_endpoint_query(user_question)
+        res = _handle_endpoint_query(user_question)
+        
+    return res, getattr(_local, "api_keys_config", None)
 
 def _handle_list_companies(user_question: str) -> str:
     """Handle requests to list companies."""

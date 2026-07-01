@@ -5,6 +5,16 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 
 
+# ── Section 0: Application Meta ───────────────────────────────────────────────
+
+class ApplicationMeta(BaseModel):
+    application_for_position_as: Optional[str] = ""
+    register_code: Optional[str] = ""
+    other_position: Optional[str] = ""
+    register_date: Optional[str] = ""
+    last_update_data: Optional[str] = ""
+
+
 # ── Section 1: Personal Details ───────────────────────────────────────────────
 
 class MaritalStatus(BaseModel):
@@ -84,9 +94,13 @@ class ProfessionalQualification(BaseModel):
 
 class NextOfKin(BaseModel):
     full_name: Optional[str] = ""
+    relationship: Optional[str] = ""
+    address: Optional[str] = ""
+    tel_no: Optional[str] = ""
+    mobile: Optional[str] = ""
+    # Old fields kept optional
     address_country: Optional[str] = ""
     tel_no_mobile: Optional[str] = ""
-    relationship: Optional[str] = ""
     email: Optional[str] = ""
 
 
@@ -134,21 +148,35 @@ class ApplicantInfo(BaseModel):
 class ServiceRecord(BaseModel):
     company_name: Optional[str] = ""
     rank: Optional[str] = ""
-    vessel_name_imo_number: Optional[str] = ""
-    flag: Optional[str] = ""
+    vessel_name: Optional[str] = ""
     signed_on: Optional[str] = ""
     signed_off: Optional[str] = ""
     period: Optional[str] = ""
     vessel_type: Optional[str] = ""
-    dwt_grt: Optional[str] = ""
+    dwt: Optional[str] = ""
     engine_type: Optional[str] = ""
+    bh: Optional[str] = ""
+    kw: Optional[str] = ""
+    # Old fields kept optional
+    vessel_name_imo_number: Optional[str] = ""
+    flag: Optional[str] = ""
+    dwt_grt: Optional[str] = ""
     bh_kw: Optional[str] = ""
     reason_for_sign_off: Optional[str] = ""
+
+
+class SpecialisedExperience(BaseModel):
+    name: Optional[str] = ""
+    type: Optional[str] = ""
+    from_date: Optional[str] = ""
+    to_date: Optional[str] = ""
+    comments: Optional[str] = ""
 
 
 class SeaServiceSection(BaseModel):
     applicant_info: ApplicantInfo = Field(default_factory=ApplicantInfo)
     service_records: List[ServiceRecord] = []
+    specialised_experience: List[SpecialisedExperience] = []
 
 
 # ── Section 10: References ────────────────────────────────────────────────────
@@ -200,6 +228,10 @@ class OfficeUseOnly(BaseModel):
 # ── Root: Seafarer Application ────────────────────────────────────────────────
 
 class SeafarerApplication(BaseModel):
+    field_0_application_meta: ApplicationMeta = Field(
+        default_factory=ApplicationMeta,
+        alias="0_application_meta"
+    )
     field_1_personal_details: PersonalDetails = Field(
         default_factory=PersonalDetails,
         alias="1_personal_details"
@@ -254,6 +286,7 @@ class SeafarerApplication(BaseModel):
     def to_numbered_dict(self) -> dict:
         """Export with the numbered key names (e.g. '1_personal_details')."""
         return {
+            "0_application_meta": self.field_0_application_meta.model_dump(),
             "1_personal_details": self.field_1_personal_details.model_dump(),
             "2_education": self.field_2_education.model_dump(),
             "3_contact_details": self.field_3_contact_details.model_dump(),

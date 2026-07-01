@@ -1536,7 +1536,7 @@ class DataMapperService:
         # Create Users instance data
         user_data = {
             # Authentication & Basic Info
-            'email': personal_details.get('email', '') or contact_details.get('email', ''),
+            'email': personal_details.get('email', '') or personal_details.get('Email', '') or contact_details.get('email', '') or contact_details.get('Email', ''),
             'first_name': name_parts['first_name'],
             'middle_name': name_parts['middle_name'],
             
@@ -1855,7 +1855,7 @@ class DataMapperService:
         
         sea_service_data = structured_data.get("Sea_Service_Details", {})
         if isinstance(sea_service_data, dict):
-            ship_exp = sea_service_data.get("ship_experience", [])
+            ship_exp = sea_service_data.get("service_records", []) or sea_service_data.get("ship_experience", [])
             if isinstance(ship_exp, list):
                 for service in ship_exp:
                     if isinstance(service, dict):
@@ -1863,6 +1863,8 @@ class DataMapperService:
                             'company_name': service.get('Company_Name', '') or service.get('company_name', ''),
                             'rank': service.get('Rank', '') or service.get('rank', ''),
                             'vessel_name_imo': service.get('Vessel_Name_IMO_Number', '') or service.get('vessel_name', ''),
+                            'vessel_name': service.get('vessel_name', ''),
+                            'imo_number': service.get('imo_number', ''),
                             'flag': service.get('Flag', '') or service.get('flag', ''),
                             'signed_on': DataMapperService.parse_date_string(service.get('Signed_On', '') or service.get('signed_on', '')),
                             'signed_off': DataMapperService.parse_date_string(service.get('Signed_Off', '') or service.get('signed_off', '')),
@@ -1963,6 +1965,16 @@ class DataMapperService:
                     
                     SeaService.objects.create(user=user, **service_data)
             logger.info(f"Added {len(sea_services_data)} sea services to user")
+            
+            # Ensure a pending CVSubmission exists for this user
+            from api.models import CVSubmission
+            cv_submission, cv_created = CVSubmission.objects.get_or_create(
+                user=user,
+                status='Pending',
+                defaults={'notes': 'Auto-created from AI document upload.'}
+            )
+            if cv_created:
+                logger.info(f"Created CVSubmission (ID: {cv_submission.id}) for user {user.email}")
             
             return user
             

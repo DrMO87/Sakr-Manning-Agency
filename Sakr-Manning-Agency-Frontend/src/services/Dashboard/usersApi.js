@@ -522,6 +522,37 @@ export const usersApi = {
   },
 
   /**
+   * Bulk delete users
+   * @param {Array<number>} userIds
+   * @returns {Promise<Object>}
+   */
+  bulkDeleteUsers: async (userIds) => {
+    try {
+      const response = await api.post('/users/users/bulk-delete/', { ids: userIds });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to bulk delete users:', error);
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  /**
+   * Bulk update users
+   * @param {Array<number>} userIds
+   * @param {Object} data - The data to update (e.g. { user_status: "ON_SITE" })
+   * @returns {Promise<Object>}
+   */
+  bulkUpdateUsers: async (userIds, data) => {
+    try {
+      const response = await api.post('/users/users/bulk-edit/', { ids: userIds, data });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to bulk update users:', error);
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  /**
    * Get user statistics
    * @returns {Promise<Object>} Statistics object
    */

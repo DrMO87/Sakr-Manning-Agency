@@ -5,14 +5,16 @@ import Pagination from "../../common/Pagination";
 import useNotification from "../hooks/useNotification";
 import usePermissions from "../../../hooks/dashboard/usePermissions";
 import useCVDocuments from "../../../hooks/dashboard/useCVDocuments";
+import useInterviews from "../../../hooks/dashboard/useInterviews";
 import CVFormModal from "../Components/Modal/CVFormModal";
 import CVViewModal from "../Components/Modal/ViewModal/CVViewModal";
+import InterviewFormModal from "../Components/Modal/InterviewFormModal";
 import { StatCard } from "../Components/Cards/StatCard";
 import LoadingScreen from "../Components/Common/LoadingScreen";
 import { COLORS } from "../Constants";
 import {
   FileText, CheckCircle2, Clock, XCircle, Search, Filter,
-  Download, Plus, Edit2, Trash2, RefreshCw, Eye, User
+  Download, Plus, Edit2, Trash2, RefreshCw, Eye, User, Calendar
 } from "lucide-react";
 
 import { AdvancedDataTable } from "../Components/Data/AdvancedDataTable";
@@ -26,9 +28,11 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
 
   const {
     documents,
+    stats,
     loading,
     pagination,
     fetchDocuments,
+    fetchDocumentStats,
     setDocumentStatus,
     downloadDocument,
     createDocument,
@@ -41,6 +45,21 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
   const [selectedCV, setSelectedCV] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingCV, setViewingCV] = useState(null);
+  
+  // Interview Modal States
+  const { createInterview } = useInterviews();
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [selectedCVForInterview, setSelectedCVForInterview] = useState(null);
+  const handleSaveInterview = async (formData) => {
+      try {
+          await createInterview(formData);
+          notify("Interview scheduled successfully", "success");
+          setShowInterviewModal(false);
+          setSelectedCVForInterview(null);
+      } catch (err) {
+          notify(err?.message || "Failed to schedule interview", "error");
+      }
+  };
   
   // Single Deletion
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -78,11 +97,12 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
     }
   }, [initialItemData, documents, loading, fetchDocuments]);
 
-  const [activeFilters, setActiveFilters] = useState({});
+  const [activeFilters, setActiveFilters] = useState({ status: "Pending" });
 
-  // Load documents on mount
+  // Load documents and stats on mount
   useEffect(() => {
-    fetchDocuments({ page: 1 });
+    fetchDocuments({ status: "Pending", page: 1 });
+    fetchDocumentStats();
   }, []);
 
   const buildBackendFilters = useCallback((vals) => {
@@ -152,16 +172,6 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
 
   // ── Statistics ──
   const statisticsData = useMemo(() => {
-    const counts = cvData.reduce(
-      (acc, item) => {
-        const s = item.status;
-        acc[s] = (acc[s] || 0) + 1;
-        acc.total += 1;
-        return acc;
-      },
-      { total: 0 }
-    );
-
     const pdfColumns = [
       { key: "name", header: "Candidate Name" },
       { key: "email", header: "Email Address" },
@@ -171,12 +181,12 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
     ];
 
     return [
-      { title: "Total CVs", value: counts.total || 0, trend: "All Submissions", icon: <FileText size={20} />, accent: COLORS.primary || "#1E40AF", onClick: () => generateStatPdfReport("Total CVs", pdfColumns, cvData) },
-      { title: "Pending", value: counts["Pending"] || 0, trend: "Awaiting Review", icon: <Clock size={20} />, accent: "#F59E0B", onClick: () => generateStatPdfReport("Pending CVs", pdfColumns, cvData.filter(d => d.status === "Pending")) },
-      { title: "Active", value: counts["Active"] || 0, trend: "Approved Candidates", icon: <CheckCircle2 size={20} />, accent: "#10B981", onClick: () => generateStatPdfReport("Active Candidates", pdfColumns, cvData.filter(d => d.status === "Active")) },
-      { title: "Blacklist", value: counts["Blacklist"] || 0, trend: "Rejected Profiles", icon: <XCircle size={20} />, accent: "#EF4444", onClick: () => generateStatPdfReport("Blacklisted Profiles", pdfColumns, cvData.filter(d => d.status === "Blacklist")) },
+      { title: "Total CVs", value: stats?.total_applications || 0, trend: "All Submissions", icon: <FileText size={20} />, accent: COLORS.primary || "#1E40AF", onClick: () => generateStatPdfReport("Total CVs", pdfColumns, cvData) },
+      { title: "Pending", value: stats?.pending_applications || 0, trend: "Awaiting Review", icon: <Clock size={20} />, accent: "#F59E0B", onClick: () => generateStatPdfReport("Pending CVs", pdfColumns, cvData.filter(d => d.status === "Pending")) },
+      { title: "Active", value: stats?.active_applications || 0, trend: "Approved Candidates", icon: <CheckCircle2 size={20} />, accent: "#10B981", onClick: () => generateStatPdfReport("Active Candidates", pdfColumns, cvData.filter(d => d.status === "Active")) },
+      { title: "Blacklist", value: stats?.blacklist_applications || 0, trend: "Rejected Profiles", icon: <XCircle size={20} />, accent: "#EF4444", onClick: () => generateStatPdfReport("Blacklisted Profiles", pdfColumns, cvData.filter(d => d.status === "Blacklist")) },
     ];
-  }, [cvData]);
+  }, [stats, cvData]);
 
   // ── Single Actions ──
   const handleStatusChange = useCallback(async (id, newStatus) => {
@@ -377,11 +387,12 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
       </div>
     )},
     { key: "actions", label: "Actions", headerClassName: "text-right", cellClassName: "text-right", render: (_, row) => (
-      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={(e) => { e.stopPropagation(); handleView(row); }} className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30" title="View Details"><Eye size={16} /></button>
-        <button onClick={(e) => { e.stopPropagation(); handleDownload(row); }} className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30" title="Download CV"><Download size={16} /></button>
-        {canEdit && <button onClick={(e) => { e.stopPropagation(); handleEditCV(row); }} className="p-1.5 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/30" title="Edit"><Edit2 size={16} /></button>}
-        {canDelete && <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30" title="Delete"><Trash2 size={16} /></button>}
+      <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+        <button onClick={(e) => { e.stopPropagation(); handleView(row); }} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details"><Eye size={18} /></button>
+        <button onClick={(e) => { e.stopPropagation(); handleDownload(row); }} className="p-1.5 text-emerald-500 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Download CV"><Download size={18} /></button>
+        <button onClick={(e) => { e.stopPropagation(); setSelectedCVForInterview(row); setShowInterviewModal(true); }} className="p-1.5 text-purple-500 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20 rounded-lg transition-colors" title="Schedule Interview"><Calendar size={18} /></button>
+        {canEdit && <button onClick={(e) => { e.stopPropagation(); handleEditCV(row); }} className="p-1.5 text-amber-500 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Edit"><Edit2 size={18} /></button>}
+        {canDelete && <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} className="p-1.5 text-rose-500 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 rounded-lg transition-colors" title="Delete"><Trash2 size={18} /></button>}
       </div>
     )}
   ];
@@ -454,8 +465,8 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
           handleApplyFilters(activeFilters);
         }}
         onClearFilters={() => {
-          setActiveFilters({});
-          handleApplyFilters({});
+          setActiveFilters({ status: "Pending" });
+          handleApplyFilters({ status: "Pending" });
         }}
       >
         <AdvancedDataTable 
@@ -488,6 +499,21 @@ export function CVManagement({ scale = 1, isMobile = false, initialItemData }) {
 
       {showViewModal && (
         <CVViewModal isOpen={showViewModal} onClose={() => { setShowViewModal(false); setViewingCV(null); }} cv={viewingCV} onDelete={(id) => { setShowViewModal(false); handleDelete(id); }} onDownload={handleDownload} scale={scale} canDelete={canDelete} />
+      )}
+
+      {showInterviewModal && (
+          <InterviewFormModal
+              isOpen={showInterviewModal}
+              interview={null}
+              onClose={() => {
+                  setShowInterviewModal(false);
+                  setSelectedCVForInterview(null);
+              }}
+              onSave={handleSaveInterview}
+              preSelectedCandidate={selectedCVForInterview?.user || selectedCVForInterview?.user_id}
+              preSelectedPosition={selectedCVForInterview?.position}
+              scale={scale}
+          />
       )}
 
       <ConfirmDialog isOpen={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setCvToDelete(null); }} onConfirm={handleConfirmDelete} title="Delete CV" message="Are you sure you want to delete this CV? This action cannot be undone." confirmLabel="Delete" variant="danger" scale={scale} loading={loading} />

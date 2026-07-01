@@ -189,7 +189,7 @@ export const API_ENDPOINTS = {
 
 // Error messages
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: "Network error. Please check your connection and try again.",
+  NETWORK_ERROR: "Network error. Please check your connection or verify the backend server is running.",
   SERVER_ERROR: "Server error. Please try again later.",
   INVALID_CREDENTIALS: "Invalid email or password.",
   EMAIL_EXISTS: "An account with this email already exists.",

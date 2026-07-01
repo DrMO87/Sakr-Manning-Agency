@@ -207,6 +207,38 @@ export function EducationForm() {
         </div>
       </div>
 
+      {/* Language Proficiency - Extracted Mutually Exclusive */}
+      <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6">
+          Languages Proficiency
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-2">
+          <RadioGroup
+            name="english_level"
+            label="English Language"
+            options={[
+              { value: "Fluent", label: "Fluent" },
+              { value: "Good", label: "Good" },
+              { value: "Average", label: "Average" },
+              { value: "Poor", label: "Poor" }
+            ]}
+          />
+          <RadioGroup
+            name="other_language_level"
+            label="German Language"
+            options={[
+              { value: "Fluent", label: "Fluent" },
+              { value: "Good", label: "Good" },
+              { value: "Average", label: "Average" },
+              { value: "Poor", label: "Poor" }
+            ]}
+          />
+          <div className="hidden">
+            <BaseInput name="other_language" type="hidden" defaultValue="German" />
+          </div>
+        </div>
+      </div>
+
       {/* Languages Section - CRUD Table */}
       <div className="bg-[#E8F4FD] rounded-lg p-6">
         <div className="flex items-center justify-between">

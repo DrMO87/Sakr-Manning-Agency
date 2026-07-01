@@ -3525,16 +3525,29 @@ class DocumentUploadView(APIView):
 
                     # Step 3: Convert text into structured JSON
                     parsed_tables = result.get("tables", [])
+                    import json
+                    api_keys_config = {}
+                    api_keys_config_str = request.data.get("api_keys_config")
+                    if api_keys_config_str:
+                        try:
+                            parsed_config = json.loads(api_keys_config_str)
+                            if isinstance(parsed_config, str):
+                                parsed_config = json.loads(parsed_config)
+                            if isinstance(parsed_config, dict):
+                                api_keys_config = parsed_config
+                        except Exception:
+                            pass
+                            
                     groq_api_key = request.data.get("groq_api_key")
                     import os
-                    if groq_api_key:
+                    if groq_api_key and not api_keys_config:
                         os.environ["GROQ_API_KEY"] = groq_api_key
+                        api_keys_config = {"groq": [{"key": groq_api_key, "status": "live", "reset_time": None}], "gemini": ""}
                         
-                    structured_json = convert_text_to_json(cleaned_text, parsed_tables=parsed_tables)
+                    structured_json, updated_api_keys = convert_text_to_json(cleaned_text, parsed_tables=parsed_tables, api_keys_config=api_keys_config)
 
-                    from .confidence_schemas import unwrap_confidence, get_doubted_fields
-                    unwrapped_json = unwrap_confidence(structured_json)
-                    doubted_fields = get_doubted_fields(structured_json)
+                    unwrapped_json = structured_json
+                    doubted_fields = []
 
                     # Ensure structured_json is a dictionary
                     if not isinstance(structured_json, dict):
@@ -3573,6 +3586,7 @@ class DocumentUploadView(APIView):
                             "structured_data": structured_json,
                             "page_count": result.get("page_count"),
                             "word_count": len(cleaned_text.split()),
+                            "api_keys_status": updated_api_keys if 'updated_api_keys' in locals() else None,
                         }, status=status.HTTP_400_BAD_REQUEST)
 
                     # Step 4: Check if we should save to DB or just return extracted data
@@ -3592,6 +3606,7 @@ class DocumentUploadView(APIView):
                             "file_name": file.name,
                             "page_count": result.get("page_count"),
                             "word_count": len(cleaned_text.split()),
+                            "api_keys_status": updated_api_keys if 'updated_api_keys' in locals() else None,
                         }, status=status.HTTP_200_OK)
 
                     # Step 5: Save structured data into Applicant model
@@ -3848,6 +3863,7 @@ class DocumentUploadView(APIView):
                             "word_count": len(cleaned_text.split()),
                             "user_creation_status": "success" if user else "failed",
                             "user_error": user_error,
+                            "api_keys_status": updated_api_keys if 'updated_api_keys' in locals() else None,
                         }
                     }, status=response_status)
 
@@ -3870,7 +3886,8 @@ class DocumentUploadView(APIView):
                 return Response({
                         "success": False,
                         "error": "Failed to process document",
-                        "details": str(e)
+                        "details": str(e),
+                        "api_keys_status": updated_api_keys if 'updated_api_keys' in locals() else None,
                     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except Exception as e:
@@ -3880,7 +3897,8 @@ class DocumentUploadView(APIView):
             return Response({
                 "success": False,
                 "error": "Internal server error",
-                "details": str(e)
+                "details": str(e),
+                "api_keys_status": updated_api_keys if 'updated_api_keys' in locals() else None,
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -4303,3 +4321,64 @@ class SaveApplicantView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
+class CheckQuotaView(APIView):
+    """
+    Endpoint to check Groq's exact remaining quota by sending a 1-token dummy request.
+    This fetches the true headers instead of just tracking session tokens.
+    """
+
+    def post(self, request):
+        try:
+            api_keys_config_str = request.data.get("api_keys_config", "")
+            if not api_keys_config_str:
+                return Response({"success": False, "error": "No API keys provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                import json
+                api_keys_config = json.loads(api_keys_config_str)
+            except json.JSONDecodeError:
+                return Response({"success": False, "error": "Invalid API keys format"}, status=status.HTTP_400_BAD_REQUEST)
+
+            groq_keys = api_keys_config.get("groq", [])
+            active_key = None
+            for key_obj in groq_keys:
+                if key_obj.get("status") == "live" and key_obj.get("key"):
+                    active_key = key_obj["key"]
+                    break
+
+            if not active_key:
+                return Response({"success": False, "error": "No live Groq key found to check quota."})
+
+            import requests
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {active_key}",
+                "Content-Type": "application/json"
+            }
+            data = {
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": "hi"}],
+                "max_tokens": 1
+            }
+            res = requests.post(url, headers=headers, json=data, timeout=10)
+            
+            if res.status_code == 200:
+                limit = res.headers.get("x-ratelimit-limit-tokens-today", "Unknown")
+                remaining = res.headers.get("x-ratelimit-remaining-tokens-today", "Unknown")
+                return Response({
+                    "success": True, 
+                    "limit": limit, 
+                    "remaining": remaining,
+                    "provider": "groq"
+                })
+            else:
+                return Response({
+                    "success": False,
+                    "error": f"Groq API returned {res.status_code}"
+                })
+
+        except Exception as e:
+            import traceback
+            logger.error(f"Error checking quota: {str(e)}\n{traceback.format_exc()}")
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

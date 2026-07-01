@@ -62,7 +62,7 @@ export const Header = ({
   const handleZoomReset = () => setZoomLevel && setZoomLevel(1);
 
   return (
-    <header className={`fixed top-0 right-0 left-0 ${isSidebarCollapsed ? 'lg:left-[80px]' : 'lg:left-[240px]'} h-[70px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm flex justify-between items-center px-6 md:px-10 z-[100] gap-5 transition-all duration-300 ease-in-out overflow-visible`}>
+    <header className="relative w-full h-[70px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm flex justify-between items-center px-6 md:px-10 z-[100] gap-5 transition-all duration-300 ease-in-out overflow-visible">
       {/* Faded blue gradient at the heading right part */}
       <div className="absolute top-0 right-0 bottom-0 w-[40%] bg-gradient-to-l from-blue-100/70 dark:from-blue-900/40 to-transparent -z-10 pointer-events-none"></div>
 
