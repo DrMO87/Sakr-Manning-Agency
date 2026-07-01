@@ -107,13 +107,17 @@ const CV_STYLES = `
 export const buildCvHtml = (submission, opts = {}) => {
   const sa = submission?.seafarer_application || {};
   const personal = sa['1_personal_details'] || {};
-  const education = sa['2_education_qualifications'] || {};
+  const education = sa['2_education'] || {};
   const contact = sa['3_contact_details'] || {};
-  const docs = sa['6_travel_documents'] || {};
-  const kin = sa['4_next_of_kin_emergency_contact'] || {};
+  const docs = sa['4_travel_documents'] || {};
+  const kin = sa['6_next_of_kin_emergency_contact'] || {};
   
   const certs = Array.isArray(sa['5_professional_qualification_certificate_of_competency']) ? sa['5_professional_qualification_certificate_of_competency'] : [];
-  const health = Array.isArray(sa['7_health_certificates_vaccinations']) ? sa['7_health_certificates_vaccinations'] : [];
+  
+  // Health certificates might be an object containing { certificates: [], covid_19: {} } or an array in older schemas
+  const healthData = sa['7_health_certificates_and_vaccinations'];
+  const health = healthData?.certificates ? healthData.certificates : (Array.isArray(healthData) ? healthData : []);
+  
   const sea = Array.isArray(sa['9_complete_sea_service_details']) ? sa['9_complete_sea_service_details'] : [];
   const courses = Array.isArray(sa['8_marine_courses']) ? sa['8_marine_courses'] : [];
   const refs = Array.isArray(sa['10_references']) ? sa['10_references'] : [];

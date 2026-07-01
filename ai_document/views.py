@@ -3478,6 +3478,73 @@ def clean_text(text: str) -> str:
 
     return "\n".join(cleaned_lines)
 
+def _create_related_user_models(user, applicant, convert_date_func):
+    from courses.models import Course
+    from api.models import SeaService, Reference
+    
+    _mc = applicant.marine_courses if isinstance(applicant.marine_courses, list) else []
+    if _mc:
+        user.courses.all().delete()
+        for c in _mc:
+            Course.objects.create(
+                user=user,
+                course_name=c.get('course_name', ''),
+                course_number=c.get('number', '') or c.get('course_number', ''),
+                issue_date=convert_date_func(c.get('issue_date')),
+                expiry_date=convert_date_func(c.get('expiry_date')),
+                issued_by=c.get('issued_by', '') or c.get('issued_by_at', ''),
+                issued_at=c.get('issued_at', '')
+            )
+
+    _ss = applicant.sea_service_details if isinstance(applicant.sea_service_details, list) else []
+    if _ss:
+        user.sea_services.all().delete()
+        for r in _ss:
+            vni = r.get('vessel_name_imo_number', '') or r.get('vessel_name_imo', '') or ''
+            dg = r.get('dwt_grt', '') or ''
+            bk = r.get('bh_kw', '') or ''
+            
+            vessel_name = vni.split('/')[0].strip() if '/' in vni else vni
+            imo_number = vni.split('/')[1].strip() if '/' in vni and len(vni.split('/')) > 1 else ''
+            
+            dwt = dg.split('/')[0].strip() if '/' in dg else dg
+            grt = dg.split('/')[1].strip() if '/' in dg and len(dg.split('/')) > 1 else ''
+            
+            bh = bk.split('/')[0].strip() if '/' in bk else bk
+            kw = bk.split('/')[1].strip() if '/' in bk and len(bk.split('/')) > 1 else ''
+            
+            SeaService.objects.create(
+                user=user,
+                company_name=r.get('company_name', ''),
+                rank=r.get('rank', ''),
+                vessel_name=vessel_name,
+                imo_number=imo_number,
+                flag=r.get('flag', ''),
+                signed_on=convert_date_func(r.get('signed_on')),
+                signed_off=convert_date_func(r.get('signed_off')),
+                period=r.get('period', ''),
+                vessel_type=r.get('vessel_type', ''),
+                dwt=dwt,
+                grt=grt,
+                engine_type=r.get('engine_type', ''),
+                bh=bh,
+                kw=kw,
+                reason_for_sign_off=r.get('reason_for_sign_off', '')
+            )
+
+    _ref = applicant.references if isinstance(applicant.references, list) else []
+    if _ref:
+        user.references.all().delete()
+        for r in _ref:
+            Reference.objects.create(
+                user=user,
+                company_name=r.get('company_management_country', '') or r.get('company_name', ''),
+                position=r.get('position', ''),
+                name=r.get('name', ''),
+                tel=r.get('tel', ''),
+                email=r.get('email', '')
+            )
+
 
 class DocumentUploadView(APIView):
     """
@@ -3779,6 +3846,7 @@ class DocumentUploadView(APIView):
                             email=email,
                             defaults=defaults
                         )
+                        _create_related_user_models(user, applicant, convert_date)
                         
                         action = "Created" if created else "Updated"
                         logger.info(f"{action} user: {user.email} (ID: {user.id})")
@@ -4278,6 +4346,7 @@ class SaveApplicantView(APIView):
                         email=email,
                         defaults=defaults
                     )
+                    _create_related_user_models(user, applicant, convert_date)
                     
                 except Exception as ue:
                     user_error = f'User creation error: {str(ue)}'

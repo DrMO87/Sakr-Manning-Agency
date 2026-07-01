@@ -305,13 +305,20 @@ function CVSubmissionEditModalInner({ isOpen, onClose, submission }) {
       // Ensure we only get documents for this user
       docs = docs.filter(d => d.user === parseInt(userId, 10));
       
+      const fullData = methods.getValues();
+      const enrichedSubmission = {
+        ...submission,
+        seafarer_application: fullData
+      };
+      
       // Generate the premium tabular CV with admin docs
-      generateBrandedCVPdf(submission, { adminDocs: docs });
+      generateBrandedCVPdf(enrichedSubmission, { adminDocs: docs });
       notify.success("Exported official application successfully!");
     } catch (err) {
       console.error("Failed to fetch admin docs for export:", err);
       // Fallback to generating without admin docs if fetch fails
-      generateBrandedCVPdf(submission);
+      const fullData = methods.getValues();
+      generateBrandedCVPdf({ ...submission, seafarer_application: fullData });
     }
   };
 

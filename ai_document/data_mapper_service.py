@@ -1953,6 +1953,22 @@ class DataMapperService:
                     Reference.objects.create(user=user, **ref_data)
             logger.info(f"Added {len(references_data)} references to user")
             
+            # Handle marine courses
+            from courses.models import Course
+            marine_courses_data = structured_data.get('Marine_Courses', [])
+            if isinstance(marine_courses_data, list):
+                for course_data in marine_courses_data:
+                    Course.objects.create(
+                        user=user,
+                        course_name=course_data.get('course_name', ''),
+                        course_number=course_data.get('number', '') or course_data.get('course_number', ''),
+                        issue_date=DataMapperService.parse_date_string(course_data.get('issue_date', '')),
+                        expiry_date=DataMapperService.parse_date_string(course_data.get('expiry_date', '')),
+                        issued_by=course_data.get('issued_by', '') or course_data.get('issued_by_at', ''),
+                        issued_at=course_data.get('issued_at', '')
+                    )
+                logger.info(f"Added {len(marine_courses_data)} marine courses to user")
+            
             # Handle sea services
             sea_services_data = DataMapperService.extract_sea_services_from_data(structured_data)
             for service_data in sea_services_data:

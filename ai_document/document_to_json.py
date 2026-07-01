@@ -44,7 +44,6 @@ def _get_active_llm(api_keys_config: dict):
                         groq_api_key=key_data["key"],
                         temperature=0,
                         max_tokens=4096,
-                        timeout=45,
                     )
                     return llm, {"provider": "groq", "index": index, "model": "llama-3.1-8b-instant", "key": key_data["key"]}
                 except Exception as e:
@@ -60,7 +59,6 @@ def _get_active_llm(api_keys_config: dict):
                 google_api_key=gemini_key,
                 temperature=0,
                 max_retries=1,
-                timeout=45,
             )
             return llm, {"provider": "gemini", "index": 0, "model": "gemini-2.5-flash", "key": gemini_key}
         except Exception as e:
